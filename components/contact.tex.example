@@ -1,0 +1,18 @@
+% ============================================================================
+% COMPONENTS/CONTACT.TEX.EXAMPLE — Shared Contact Details
+% ============================================================================
+% Copy this file to contact.tex and fill in your details:
+%   cp components/contact.tex.example components/contact.tex
+%
+% Used by: designed CV (canvas.tex) and ATS generator (scripts/generate_ats.py)
+% Format: \ContactField{value} — one field per line
+% ============================================================================
+
+\ContactName{Fred Durst}                          % Your full name
+\ContactTitle{Senior Nookie Engineer}              % Target job title
+\ContactEmail{fred.durst@limpbizkit.com}           % Professional email
+\ContactPhone{+1 904 555 1998}                     % Include country code
+\ContactLinkedIn{linkedin.com/in/freddurst}        % No https:// prefix
+\ContactGitHub{github.com/freddurst}               % No https:// prefix
+\ContactLocation{Jacksonville, FL}                 % City, Country
+\ContactFullCV{https://freddurst.com/cv.pdf}       % Stable URL to designed PDF

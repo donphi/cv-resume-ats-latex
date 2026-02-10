@@ -118,7 +118,7 @@
         %
         % ROW 0: Name
         \vbox to \TPVertModule{\vss\hbox{%
-            {\HSL┌\Repeat{\nameDashLeft}{─}}· \textbf{#3}{\HC▌} ·{\HSL\Repeat{\nameDashRight}{─}}{\HDL╖}%
+            {\HSL┌\Repeat{\nameDashLeft}{─}}· \textbf{\MakeUppercase{#3}}{\HC▌}·{\HSL\Repeat{\nameDashRight}{─}}{\HDL╖}%
         }\vss}%
         %
         % ROW 1: Dot-filled empty
@@ -128,7 +128,7 @@
         \pgfmathtruncatemacro{\titlePadLeft}{(\innerW - \titleLen - 4) / 2}%
         \pgfmathtruncatemacro{\titlePadRight}{\innerW - \titleLen - 4 - \titlePadLeft}%
         \vbox to \TPVertModule{\vss\hbox{%
-            {\HSL│}{\HDOT\Repeat{\titlePadLeft}{·}}{ }{\HC>\_}\textbf{#4}{ }{\HDOT\Repeat{\titlePadRight}{·}}{\HDL║}%
+            {\HSL│}{\HDOT\Repeat{\titlePadLeft}{·}}{ }{\HC>\_}\textbf{\MakeUppercase{#4}}{ }{\HDOT\Repeat{\titlePadRight}{·}}{\HDL║}%
         }\vss}%
         %
         % ROW 3: Dot-filled empty

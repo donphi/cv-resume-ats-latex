@@ -966,4 +966,30 @@
     \end{textblock}%
 }
 
+% ============================================================================
+% §9  CONTACT DATA — shared macros populated by components/contact.tex
+% ============================================================================
+% Each \Contact* command stores its argument into a macro.
+% canvas.tex inputs the contact file, then feeds the macros to \SetCVHeader.
+% The ATS generator (scripts/generate_ats.py) parses the same file via regex.
+% ============================================================================
+\newcommand{\ContactName}[1]{\gdef\StoredContactName{#1}}
+\newcommand{\ContactTitle}[1]{\gdef\StoredContactTitle{#1}}
+\newcommand{\ContactEmail}[1]{\gdef\StoredContactEmail{#1}}
+\newcommand{\ContactPhone}[1]{\gdef\StoredContactPhone{#1}}
+\newcommand{\ContactLinkedIn}[1]{\gdef\StoredContactLinkedIn{#1}}
+\newcommand{\ContactGitHub}[1]{\gdef\StoredContactGitHub{#1}}
+\newcommand{\ContactLocation}[1]{\gdef\StoredContactLocation{#1}}
+\newcommand{\ContactFullCV}[1]{\gdef\StoredContactFullCV{#1}}
+
+% Defaults (in case a field is missing from the contact file)
+\ContactName{Your Name}
+\ContactTitle{Your Title}
+\ContactEmail{email@example.com}
+\ContactPhone{+00 000 000 0000}
+\ContactLinkedIn{linkedin.com/in/you}
+\ContactGitHub{github.com/you}
+\ContactLocation{City, Country}
+\ContactFullCV{https://example.com/cv.pdf}
+
 \endinput

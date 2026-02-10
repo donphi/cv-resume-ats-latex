@@ -1,0 +1,10 @@
+services:
+  latex-ats:
+    build:
+      context: .
+      dockerfile: Dockerfile.ats
+    volumes:
+      - .:/data
+    environment:
+      - HOME=/tmp
+    user: "${DOCKER_UID:-1000}:${DOCKER_GID:-1000}"

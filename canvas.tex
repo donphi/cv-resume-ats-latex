@@ -37,15 +37,20 @@
 \input{templates/pageflow.tex}
 
 % ----------------------------------------------------------------------------
+% LOAD CONTACT DATA (shared with ATS pipeline via components/contact.tex)
+% ----------------------------------------------------------------------------
+\input{components/contact.tex}
+
+% ----------------------------------------------------------------------------
 % STORE HEADER (repeated on every page via \CVPageBreak)
 % ----------------------------------------------------------------------------
 \SetCVHeader
-    {DONALD PHILP}
-    {PRINCIPAL AI SYSTEMS ARCHITECT}
-    {donald.philp@gmail.com}
-    {+44 777 8904 717}
-    {linkedin.com/donphi}
-    {London, UK}
+    {\StoredContactName}
+    {\StoredContactTitle}
+    {\StoredContactEmail}
+    {\StoredContactPhone}
+    {\StoredContactLinkedIn}
+    {\StoredContactLocation}
 
 % ============================================================================
 % PAGE 1
@@ -70,8 +75,6 @@
 \RightBox{TECHNICAL SKILLS}{components/skills.tex}
 \RightBoxGap{\GapBoxToBox}
 \RightBox{EDUCATION}{components/education.tex}
-\RightBoxGap{\GapBoxToBox}
-\RightBox{REFERENCES}{components/references.tex}
 
 % ============================================================================
 % PAGE 2
@@ -84,7 +87,6 @@
 
 % --- Right column ---
 \RightBoxInit{\RightColX}{\ContentStartY}
-\RightBox{REFERENCES}{components/references.tex}
 
 \endinput
 
