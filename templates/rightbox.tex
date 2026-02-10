@@ -1,0 +1,160 @@
+% ============================================================================
+% TEMPLATES/RIGHTBOX.TEX — Right Column Auto-Height Boxes
+% ============================================================================
+%
+% ZERO hardcoded values. All parameters come from preamble.tex:
+%   §6  \RightBoxWidth, \RightBoxPad*, \RightContentWidth
+%   §4  \RSL, \RDL, \RDOT  (right box color shortcuts)
+%   §7  \RightTypography, \Repeat
+%   §4  content-bg  (Tier 3 color for content background)
+%
+% SETUP (in canvas.tex):
+%   \RightBoxInit{\RightColX}{\ContentStartY}
+%
+% USAGE:
+%   \RightBox{SECTION TITLE}{components/your-content.tex}
+%   \RightBoxGap{1}
+%   \RightBox{NEXT TITLE}{components/next-content.tex}
+%
+% HOW IT WORKS:
+%   - Box origin (0,0) is TOP-LEFT corner of the drawable area
+%   - X increases rightward, Y increases downward
+%   - Each box auto-measures content height
+%   - Y position auto-updates after each box
+%
+% STRUCTURAL CONSTANTS (derived from box-drawing pattern, not params):
+%   7 = border/dot/space char count in title row: ┌(1) ─(1) ·(1) space(1) TITLE space(1) ·(1) ╖(1)
+%   2 = left + right border columns (│ and ║)
+%
+% ============================================================================
+
+% ----------------------------------------------------------------------------
+% POSITION TRACKING (internal — set via \RightBoxInit)
+% ----------------------------------------------------------------------------
+\newcommand{\RightPosX}{0}              % Current X position
+\newcommand{\RightPosY}{0}              % Current Y position
+
+% Initialize position — CALL THIS FIRST in canvas.tex
+\newcommand{\RightBoxInit}[2]{%
+    % #1 = X position (grid columns from left)
+    % #2 = Y position (grid rows from top)
+    \xdef\RightPosX{#1}%
+    \xdef\RightPosY{#2}%
+}
+
+% ----------------------------------------------------------------------------
+% CONTENT MEASUREMENT BOX (internal)
+% ----------------------------------------------------------------------------
+\newsavebox{\RightMeasureBox}
+
+% ----------------------------------------------------------------------------
+% MAIN BOX COMMAND
+% ----------------------------------------------------------------------------
+% Usage: \RightBox{TITLE}{content-file.tex}
+%
+\newcommand{\RightBox}[2]{%
+    % #1 = TITLE (appears in top border)
+    % #2 = content file path (e.g., components/skills.tex)
+    %
+    % =========================================================================
+    % STEP 1: MEASURE CONTENT HEIGHT
+    % =========================================================================
+    \renewcommand{\CurrentTypography}{\RightTypography}%
+    \savebox{\RightMeasureBox}{%
+        \begin{minipage}{\RightContentWidth\TPHorizModule}%
+            \RightTypography%
+            \input{#2}%
+        \end{minipage}%
+    }%
+    %
+    % Calculate rows needed
+    \pgfmathsetmacro{\rawHeightPt}{\ht\RightMeasureBox + \dp\RightMeasureBox}%
+    \pgfmathtruncatemacro{\contentRows}{ceil(\rawHeightPt / \TPVertModule)}%
+    %
+    % Total box height = top border + padding + content + padding + bottom border
+    \pgfmathtruncatemacro{\boxRows}{1 + \RightBoxPadTop + \contentRows + \RightBoxPadBot + 1}%
+    \pgfmathtruncatemacro{\bodyRows}{\boxRows - 2}%
+    \pgfmathtruncatemacro{\innerW}{\RightBoxWidth - 2}%
+    %
+    % Debug output (visible in .log file)
+    \typeout{RIGHTBOX [\detokenize{#1}]: rawPt=\rawHeightPt, contentRows=\contentRows, boxRows=\boxRows}%
+    %
+    % =========================================================================
+    % STEP 2: DRAW BOX FRAME
+    % =========================================================================
+    \StrLen{#1}[\titleLen]%
+    \pgfmathtruncatemacro{\dashCount}{\RightBoxWidth - 7 - \titleLen}%
+    %
+    \begin{textblock}{\RightBoxWidth}(\RightPosX,\RightPosY)%
+        \mono%
+        % Kill all automatic spacing — critical for deterministic heights
+        \baselineskip=0pt\relax%
+        \lineskip=0pt\relax%
+        \lineskiplimit=0pt\relax%
+        \parskip=0pt\relax%
+        \offinterlineskip%
+        %
+        % Top border with title
+        \vbox to \TPVertModule{\vss\hbox{{\RSL┌─·} \textbf{#1} {\RSL·\Repeat{\dashCount}{─}}{\RDL╖}}\vss}%
+        % Body rows (dot-filled)
+        \foreach \n in {1,...,\bodyRows}{%
+            \vbox to \TPVertModule{\vss\hbox{{\RSL│}{\RDOT\Repeat{\innerW}{·}}{\RDL║}}\vss}%
+        }%
+        % Bottom border
+        \vbox to \TPVertModule{\vss\hbox{{\RDL╘\Repeat{\innerW}{═}╝}}\vss}%
+    \end{textblock}%
+    %
+    % =========================================================================
+    % STEP 3: PLACE CONTENT (two layers: background overlay + text)
+    % =========================================================================
+    %
+    % Layer 1: Background rectangle covering dots inside the border,
+    %          inset by 1 grid cell on each side so 1 dot column/row stays visible.
+    \pgfmathsetmacro{\bgX}{\RightPosX + 2}%
+    \pgfmathsetmacro{\bgY}{\RightPosY + 2}%
+    \pgfmathtruncatemacro{\bgW}{\innerW - 3}%
+    \pgfmathtruncatemacro{\bgH}{\bodyRows - 3}%
+    \begin{textblock}{\bgW}(\bgX,\bgY)%
+        \colorbox{content-bg}{\makebox[\bgW\TPHorizModule][l]{\rule{0pt}{\bgH\TPVertModule}}}%
+    \end{textblock}%
+    %
+    % Layer 2: Content text, positioned with padding offsets on top of the bg.
+    \pgfmathsetmacro{\contentX}{\RightPosX + \RightBoxPadLeft}%
+    \pgfmathsetmacro{\contentY}{\RightPosY + 1 + \RightBoxPadTop}%
+    \begin{textblock}{\RightContentWidth}(\contentX,\contentY)%
+        \begin{minipage}{\RightContentWidth\TPHorizModule}%
+            \RightTypography%
+            \input{#2}%
+        \end{minipage}%
+    \end{textblock}%
+    %
+    % =========================================================================
+    % STEP 4: UPDATE Y FOR NEXT BOX
+    % =========================================================================
+    \pgfmathsetmacro{\newY}{\RightPosY + \boxRows}%
+    \xdef\RightPosY{\newY}%
+}
+
+% ----------------------------------------------------------------------------
+% GAP COMMAND
+% ----------------------------------------------------------------------------
+% Usage: \RightBoxGap{1}    % Add 1 row gap
+%        \RightBoxGap{0.5}  % Add half row gap
+%
+\newcommand{\RightBoxGap}[1]{%
+    \pgfmathsetmacro{\newY}{\RightPosY + #1}%
+    \xdef\RightPosY{\newY}%
+}
+
+% ----------------------------------------------------------------------------
+% DEBUG: Show current Y position
+% ----------------------------------------------------------------------------
+% Usage: \RightBoxDebug     % Shows red "Y=xxx" at current position
+%
+\newcommand{\RightBoxDebug}{%
+    \begin{textblock}{20}(\RightPosX,\RightPosY)%
+        \tiny\mono\color{red}Y=\RightPosY%
+    \end{textblock}%
+}
+
+\endinput

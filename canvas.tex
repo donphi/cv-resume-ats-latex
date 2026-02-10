@@ -1,0 +1,119 @@
+% ============================================================================
+% CANVAS.TEX — Layout Assembly
+% ============================================================================
+%
+% This file places content on the page using the grid coordinate system.
+%
+% COORDINATE SYSTEM:
+%   (0,0) = top-left of the drawable area (inside margins).
+%   X increases rightward in grid columns.
+%   Y increases downward in grid rows.
+%   Grid dimensions (\GridCols × \GridRows) are computed in preamble.tex §2.
+%
+% ALL POSITIONS ARE DERIVED from preamble.tex:
+%   \ContentStartY ... first row below the header (= \HeaderHeight + 1)
+%   \RightColX ....... right column X origin  (= \LeftBoxWidth + \ColumnGap)
+%   \GapBoxToBox ..... vertical gap between stacked boxes
+%
+% The ONLY things hardcoded here are:
+%   - \input paths to templates and components (these are file names, not params)
+%   - Content text passed to \SetCVHeader (personal data)
+%   - The (0,0) origin for the header (it always starts at the top-left)
+%   - The 0 X-origin for the left column (it always starts at column 0)
+%
+% PAGE BREAKS: call \CVPageBreak between page sections.
+% SPLIT CONTENT: break long components into -1.tex / -2.tex and use
+%                separate \LeftBox calls on different pages.
+%
+% ============================================================================
+
+% ----------------------------------------------------------------------------
+% LOAD TEMPLATES + PAGEFLOW
+% ----------------------------------------------------------------------------
+\input{templates/header.tex}
+\input{templates/leftbox.tex}
+\input{templates/rightbox.tex}
+\input{templates/fullbox.tex}
+\input{templates/pageflow.tex}
+
+% ----------------------------------------------------------------------------
+% STORE HEADER (repeated on every page via \CVPageBreak)
+% ----------------------------------------------------------------------------
+\SetCVHeader
+    {DONALD PHILP}
+    {PRINCIPAL AI SYSTEMS ARCHITECT}
+    {donald.philp@gmail.com}
+    {+44 777 8904 717}
+    {linkedin.com/donphi}
+    {London, UK}
+
+% ============================================================================
+% PAGE 1
+% ============================================================================
+
+% --- Header (always at grid origin 0,0) ---
+\CVHeader{0}{0}
+    {\StoredName}{\StoredTitle}
+    {\StoredEmail}{\StoredPhone}
+    {\StoredLinkedin}{\StoredLocation}
+
+% --- Left column (starts at col 0, below header) ---
+\LeftBoxInit{0}{\ContentStartY}
+\LeftBox{SUMMARY}{components/summary.tex}
+\LeftBoxGap{\GapBoxToBox}
+\LeftBox{AI \& ML EXPERIENCE}{components/research_experience.tex}
+\LeftBoxGap{\GapBoxToBox}
+\LeftBox{PREVIOUS WORK}{components/work_experience.tex}
+
+% --- Right column (starts at \RightColX, below header) ---
+\RightBoxInit{\RightColX}{\ContentStartY}
+\RightBox{TECHNICAL SKILLS}{components/skills.tex}
+\RightBoxGap{\GapBoxToBox}
+\RightBox{EDUCATION}{components/education.tex}
+\RightBoxGap{\GapBoxToBox}
+\RightBox{REFERENCES}{components/references.tex}
+
+% ============================================================================
+% PAGE 2
+% ============================================================================
+\CVPageBreak
+
+% --- Left column (continued) ---
+\LeftBoxInit{0}{\ContentStartY}
+\LeftBox{PREVIOUS WORK}{components/work_experience.tex}
+
+% --- Right column ---
+\RightBoxInit{\RightColX}{\ContentStartY}
+\RightBox{REFERENCES}{components/references.tex}
+
+\endinput
+
+% ============================================================================
+% LAYOUT DIAGRAM (reference only — all values are derived)
+% ============================================================================
+%
+% With A4 paper, 13.5mm min margin (snapped), 9pt Iosevka Extended:
+%   Grid = \GridCols cols × \GridRows rows  (96 × 85 at defaults)
+%
+%  Col: 0           \LeftBoxWidth     \RightColX              \GridCols
+%       |                |              |                        |
+%   0   ╒═══════════════════════· NAME ·══════════════════════════╕
+%   1   │ · · · · · · · · · · · · · · · · · · · · · · · · · · · ║
+%   2   │ · · · · · >_ TITLE · · · · · · · · · · · · · · · · · ║
+%   3   │ · · · · · · · · · · · · · · · · · · · · · · · · · · · ║
+%   4   │ · · email · · phone · · linkedin · · location · · · · ║
+%   5   ╘═══════════════════════════════════════════════════════╝
+%   6   (1 row gap = \GapBoxToBox)
+%   7   ┌─· SUMMARY ·──────────┐   ┌─· TECHNICAL SKILLS ·──────┐
+%   8   │ · · · · · · · · · · ·│   │ · · · · · · · · · · · · · │
+%  ...  │  [auto-height]       │   │  [auto-height]             │
+%       └──────────────────────┘   └────────────────────────────┘
+%       (\GapBoxToBox gap)         (\GapBoxToBox gap)
+%       ┌─· AI & ML EXP ·──────┐   ┌─· EDUCATION ·─────────────┐
+%       │                      │   │                            │
+%       └──────────────────────┘   └────────────────────────────┘
+%       ... and so on ...
+%
+% ============================================================================
+
+\endinput

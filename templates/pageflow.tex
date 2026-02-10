@@ -1,0 +1,70 @@
+% ============================================================================
+% TEMPLATES/PAGEFLOW.TEX — Multi-Page Pagination Engine
+% ============================================================================
+%
+% ZERO hardcoded values. All parameters come from preamble.tex:
+%   §2  \GridRows               (total rows in the drawable area)
+%   §6  \ContentStartY          (first row below the header)
+%
+% PURPOSE:
+%   Handles everything needed when the CV spans more than one page:
+%   1. Stores header data once, so it can be repeated on every page.
+%   2. Provides \CVPageBreak which starts a new page, re-draws the
+%      header, and resets the left/right column Y cursors so boxes
+%      continue from the correct row.
+%   3. Exposes \MaxPageY — the last usable grid row — so future
+%      overflow detection can compare column Y positions against it.
+%
+% LOAD ORDER:
+%   This file must be loaded AFTER the template files (header.tex,
+%   leftbox.tex, rightbox.tex) because it uses \CVHeader, \LeftPosY,
+%   and \RightPosY which those templates define.
+%   canvas.tex loads it in the correct order automatically.
+%
+% USAGE (in canvas.tex):
+%   \SetCVHeader{Name}{Title}{email}{phone}{linkedin}{location}
+%   ... place boxes on page 1 ...
+%   \CVPageBreak
+%   ... place boxes on page 2 (header auto-repeats, Y resets) ...
+%
+% ============================================================================
+
+% --- Overflow boundary (derived) --------------------------------------------
+%     Last usable grid row. Compare \LeftPosY or \RightPosY against this
+%     to detect when content would overflow the page.
+\newcommand{\MaxPageY}{\GridRows}
+
+% --- Store header arguments for repetition ----------------------------------
+%     Called once in canvas.tex. Stores all 6 header fields as global macros
+%     so \RepeatHeader can re-draw the header on subsequent pages.
+\newcommand{\SetCVHeader}[6]{%
+    \gdef\StoredName{#1}%
+    \gdef\StoredTitle{#2}%
+    \gdef\StoredEmail{#3}%
+    \gdef\StoredPhone{#4}%
+    \gdef\StoredLinkedin{#5}%
+    \gdef\StoredLocation{#6}%
+}
+
+% --- Replay the stored header -----------------------------------------------
+%     Internal helper. Always placed at grid origin (0,0).
+\newcommand{\RepeatHeader}{%
+    \CVHeader{0}{0}%
+        {\StoredName}{\StoredTitle}%
+        {\StoredEmail}{\StoredPhone}%
+        {\StoredLinkedin}{\StoredLocation}%
+}
+
+% --- Page break with header repetition + Y reset ----------------------------
+%     Inserts a page break, re-draws the header at the top of the new page,
+%     and resets ALL column Y cursors to \ContentStartY so boxes placed
+%     after this command start in the correct row.
+\newcommand{\CVPageBreak}{%
+    \null\newpage\null%
+    \RepeatHeader
+    \xdef\LeftPosY{\ContentStartY}%
+    \xdef\RightPosY{\ContentStartY}%
+    \xdef\FullPosY{\ContentStartY}%
+}
+
+\endinput

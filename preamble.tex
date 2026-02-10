@@ -1,0 +1,969 @@
+% ============================================================================
+% PREAMBLE.TEX — Single Source of Truth
+% ============================================================================
+%
+% This file controls the ENTIRE CV. Every visual decision lives here.
+% Templates (header.tex, leftbox.tex, rightbox.tex) and components
+% (summary.tex, research_experience.tex, etc.) consume ONLY named values
+% defined in this file. No template contains a hardcoded color, font
+% size, or spacing value.
+%
+% STRUCTURE:
+%   §1  DOCUMENT CLASS & PACKAGES
+%   §2  GRID ENGINE — Master dimensions everything derives from
+%   §3  FONTS — Three families, all sizes centralised
+%   §4  THEME — Colors in 3 tiers: Palette → Roles → Elements
+%   §5  SPACING — Every vertical/horizontal gap as a named length
+%   §6  BOX GEOMETRY — Widths, padding, column positions
+%   §7  CONTENT FORMATTING — Lists, trees, timelines, helpers
+%   §8  DEBUG
+%
+% ============================================================================
+
+
+% ============================================================================
+% §1  DOCUMENT CLASS & PACKAGES
+% ============================================================================
+%
+% MASTER PARAMETERS (set before \documentclass — only \def allowed here):
+%   \PageFormat .......... Paper size: "a4" (210×297mm) or "letter" (215.9×279.4mm)
+%   \PageMarginMM ........ Page margin on all four sides, in mm (numeric)
+% ============================================================================
+
+% --- Page format (master) ---------------------------------------------------
+%     Change to "letter" for US Letter, "a4" for ISO A4.
+\def\PageFormat{a4}
+\def\PageMarginMM{13.5}
+
+% --- Page dimensions (derived — do not edit) --------------------------------
+\def\tmpPageFmt{a4}
+\ifx\PageFormat\tmpPageFmt
+  \def\PageWidthMM{210}
+  \def\PageHeightMM{297}
+\else
+  \def\PageWidthMM{215.9}
+  \def\PageHeightMM{279.4}
+\fi
+
+\documentclass[\PageFormat paper]{article}
+
+\usepackage{xfp}                  % floating-point math for grid calc
+\usepackage{calc}                 % length arithmetic
+\usepackage[absolute,overlay]{textpos}  % absolute positioning on page
+\usepackage{fvextra}              % verbatim extras
+\usepackage{xcolor}               % color system
+\usepackage{fontspec}             % OpenType font loading (LuaLaTeX/XeLaTeX)
+\usepackage{enumitem}             % list customisation
+\usepackage{setspace}             % line spacing control
+\usepackage{graphicx}             % images
+\usepackage{hyperref}             % clickable links
+\usepackage{fontawesome5}         % icons
+\usepackage{pgfmath}              % math engine
+\usepackage{pgffor}               % \foreach loops
+\usepackage{xstring}              % string length measurement
+\usepackage{tikz}                 % drawing (used sparingly)
+\usepackage{geometry}             % page geometry (configured in §2)
+
+
+% ============================================================================
+% §2  GRID ENGINE
+% ============================================================================
+% The entire CV sits on a character-cell grid, like a terminal. Every
+% position, width, height, and spacing is expressed in grid units.
+%
+% MASTER PARAMETERS (change these to resize the entire layout):
+%   \GridFontSize .......... Base monospace font size in pt
+%   \MonoWidthRatio ........ Width-to-height ratio of the monospace font
+%                            (0.6 = Iosevka Extended / Grade 7)
+%   \ContentWidthScale ..... Set to 1.0 (no scaling). Content minipage
+%                            fills the full available space between padding.
+%
+% DERIVATION ORDER (margins are the hard authority):
+%   1. \CellWidth, \CellHeight .... from font size, width ratio, and \PtToMM
+%   2. \GridCols, \GridRows ........ whole cells that fit inside min margins
+%   3. \DrawableWidth, \DrawableHeight .. grid * cell (exact, zero waste)
+%   4. \MarginH, \MarginV ......... actual snapped margins (>= \PageMarginMM)
+%   5. geometry + textpos ......... configured with snapped margins
+%
+%   This guarantees column 0 is exactly at the left margin and column
+%   GridCols-1 is exactly at the right margin. Boxes pinned to either
+%   edge will always touch their respective margin precisely.
+%
+% ALSO SET BY TEXTPOS (do not edit):
+%   \TPHorizModule ......... Width of one grid column in pt
+%   \TPVertModule .......... Height of one grid row in pt
+% ============================================================================
+
+% --- Master parameters ------------------------------------------------------
+\newcommand{\GridFontSize}{9}             % pt — base size for mono grid
+\newcommand{\MonoWidthRatio}{0.6}         % monospace width:height (0.6 = Extended)
+\newcommand{\ContentWidthScale}{1.0}      % no scaling — minipage width = available space
+
+% --- Step 1: cell size (from font metrics) ----------------------------------
+%     1 pt = 25.4 mm / 72 ≈ 0.35278 mm  (standard TeX PostScript point)
+%     We store this as \PtToMM so the conversion isn't a magic number.
+\newcommand{\PtToMM}{\fpeval{25.4 / 72}}% = 0.35277… mm per pt
+\newcommand{\CellWidth}{\fpeval{\GridFontSize * \MonoWidthRatio * \PtToMM}}
+\newcommand{\CellHeight}{\fpeval{\GridFontSize * \PtToMM}}
+
+% --- Step 2: grid dimensions (from minimum margin) --------------------------
+%     How many whole cells fit between the margins?
+\newcommand{\GridCols}{\fpeval{floor((\PageWidthMM - 2 * \PageMarginMM) / \CellWidth)}}
+\newcommand{\GridRows}{\fpeval{floor((\PageHeightMM - 2 * \PageMarginMM) / \CellHeight)}}
+
+% --- Step 3: exact drawable area (grid * cell = zero waste) -----------------
+\newcommand{\DrawableWidth}{\fpeval{\GridCols * \CellWidth}}
+\newcommand{\DrawableHeight}{\fpeval{\GridRows * \CellHeight}}
+
+% --- Step 4: actual margins (snapped — always >= \PageMarginMM) -------------
+%     The leftover space after fitting whole grid cells is split evenly
+%     between both sides. This guarantees column 0 is exactly at the
+%     left margin and column GridCols-1 is exactly at the right margin.
+\newcommand{\MarginH}{\fpeval{(\PageWidthMM - \DrawableWidth) / 2}}
+\newcommand{\MarginV}{\fpeval{(\PageHeightMM - \DrawableHeight) / 2}}
+
+% --- Step 5: configure page geometry with snapped margins -------------------
+\geometry{left=\MarginH mm, right=\MarginH mm, top=\MarginV mm, bottom=\MarginV mm}
+
+% --- Activate grid ----------------------------------------------------------
+%     We set \TPHorizModule and \TPVertModule directly instead of using
+%     \TPGrid, because \TPGrid with the 'absolute' option divides
+%     \paperwidth / cols (not drawable width), giving grid cells LARGER
+%     than our monospace characters. Setting modules directly ensures
+%     1 grid column = 1 character cell exactly.
+\TPHorizModule=\fpeval{\CellWidth} mm\relax
+\TPVertModule=\fpeval{\CellHeight} mm\relax
+\textblockorigin{\MarginH mm}{\MarginV mm}% origin = top-left of snapped margins
+
+% --- Kill all default LaTeX spacing -----------------------------------------
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0pt}
+\setstretch{1.0}
+
+% --- Disable hyphenation (prefer loose spacing over broken words) -----------
+\hyphenpenalty=10000
+\exhyphenpenalty=10000
+\tolerance=9999
+\emergencystretch=2em
+
+
+% ============================================================================
+% §3  FONTS
+% ============================================================================
+% Three font families, each with a specific role:
+%
+%   MONO (Iosevka Extended) — \mono
+%     Purpose: Box borders, tree branches, all structural/decorative chars.
+%     Fixed width means every character aligns to the grid perfectly.
+%     Loaded at \GridFontSize so 1 character = 1 grid cell.
+%
+%   AILE (Iosevka Aile) — \aile
+%     Purpose: Body text, descriptions, bullet content.
+%     Proportional sans-serif. Readable at small sizes.
+%     Content areas use \ContentWidthScale = 1.0 (no scaling).
+%
+%   ETOILE (Iosevka Etoile) — \etoile
+%     Purpose: Available for display/heading use if needed.
+%     Proportional serif variant. Currently unused but wired up.
+%
+% SIZE SCALE (all centralised here):
+%   \ContentSizeLeft ..... Font size command for left box content
+%   \ContentSizeRight .... Font size command for right box content
+%   \HeadingSize ......... Font size for SubHead and Role titles
+%   \SecondarySize ....... Font size for dates, locations, org lines
+% ============================================================================
+
+% --- Font loading -----------------------------------------------------------
+\setmonofont{Iosevka-Extended}[
+    Path=fonts/,
+    Extension=.ttf,
+    UprightFont=*,
+    BoldFont=*Bold,
+    ItalicFont=*Italic,
+    BoldItalicFont=*Bold,
+]
+
+\setmainfont{IosevkaAile}[
+    Path=fonts/,
+    Extension=.ttf,
+    UprightFont=*-Regular,
+    BoldFont=*-Bold,
+    ItalicFont=*-Italic,
+    BoldItalicFont=*-BoldItalic,
+]
+
+\setsansfont{IosevkaEtoile}[
+    Path=fonts/,
+    Extension=.ttf,
+    UprightFont=*-Regular,
+    BoldFont=*-Bold,
+    ItalicFont=*-Italic,
+    BoldItalicFont=*-BoldItalic,
+]
+
+% --- Family shortcuts -------------------------------------------------------
+\newcommand{\mono}{\ttfamily\fontsize{\GridFontSize pt}{\GridFontSize pt}\selectfont}
+\newcommand{\aile}{\rmfamily}
+\newcommand{\etoile}{\sffamily}
+
+% --- Size commands (change these to resize all content globally) ------------
+%     These are LaTeX size commands: \tiny \scriptsize \footnotesize
+%     \small \normalsize \large etc.
+\newcommand{\ContentSizeLeft}{\footnotesize}    % left box body text
+\newcommand{\ContentSizeRight}{\footnotesize}   % right box body text (matches left for consistency)
+\newcommand{\HeadingSize}{\small\bfseries}      % subsection headings
+\newcommand{\SecondarySize}{\footnotesize}      % dates, orgs, locations
+
+
+% ============================================================================
+% §4  THEME — Color System
+% ============================================================================
+%
+% 3 TIERS:
+%
+%   TIER 1: PALETTE
+%     8 raw hex values. The ONLY place hex codes exist.
+%     Swap one block to re-theme the entire CV.
+%
+%   TIER 2: ROLES
+%     Maps palette → functional categories. Controls broad groups
+%     (e.g. "all box lines", "all accents"). Normally untouched.
+%
+%   TIER 3: ELEMENTS
+%     Every individual visual element has its own color name.
+%     By default each inherits from its Tier 2 role.
+%     Override any single line to break one element out of its group.
+%
+% Templates use ONLY Tier 3 names. No template ever references
+% a palette color or a role color directly.
+%
+% ============================================================================
+
+% ----------------------------------------------------------------------------
+% TIER 1: PALETTE
+% ----------------------------------------------------------------------------
+% Uncomment ONE theme block. Comment all others. Recompile.
+%
+%   pal-bg ........... Page background
+%   pal-text ......... Body text, default foreground
+%   pal-structure .... Light structural lines (single-line box edges)
+%   pal-depth ........ Heavy structural lines (double-line box edges)
+%   pal-accent ....... Bullets, branches, markers, active highlights
+%   pal-dot .......... Background dot texture fill
+%   pal-heading ...... Section title text in box borders
+%   pal-subtle ....... De-emphasized text (dates, locations, secondary)
+% ----------------------------------------------------------------------------
+
+% --- THEME: Warm Orange (active) -------------------------------------------
+% \definecolor{pal-bg}{HTML}{FEFDFA}
+% \definecolor{pal-text}{HTML}{333333}
+% \definecolor{pal-structure}{HTML}{B8A090}
+% \definecolor{pal-depth}{HTML}{9C877A}
+% \definecolor{pal-accent}{HTML}{CC5500}
+% \definecolor{pal-dot}{HTML}{DDD8D0}
+% \definecolor{pal-heading}{HTML}{333333}
+% \definecolor{pal-subtle}{HTML}{7A7A7A}
+
+% --- THEME: Cool Blue -------------------------------------------------------
+\definecolor{pal-bg}{HTML}{F8FAFC}
+\definecolor{pal-text}{HTML}{2D3748}
+\definecolor{pal-structure}{HTML}{94A3B8}
+\definecolor{pal-depth}{HTML}{64748B}
+\definecolor{pal-accent}{HTML}{2563EB}
+\definecolor{pal-dot}{HTML}{CBD5E1}
+\definecolor{pal-heading}{HTML}{1E293B}
+\definecolor{pal-subtle}{HTML}{64748B}
+
+% --- THEME: Monochrome ------------------------------------------------------
+% \definecolor{pal-bg}{HTML}{FAFAFA}
+% \definecolor{pal-text}{HTML}{262626}
+% \definecolor{pal-structure}{HTML}{A3A3A3}
+% \definecolor{pal-depth}{HTML}{737373}
+% \definecolor{pal-accent}{HTML}{525252}
+% \definecolor{pal-dot}{HTML}{D4D4D4}
+% \definecolor{pal-heading}{HTML}{262626}
+% \definecolor{pal-subtle}{HTML}{737373}
+
+% --- THEME: Forest Green ----------------------------------------------------
+% \definecolor{pal-bg}{HTML}{FAFDF7}
+% \definecolor{pal-text}{HTML}{2D3A2D}
+% \definecolor{pal-structure}{HTML}{A3B89A}
+% \definecolor{pal-depth}{HTML}{6B7F63}
+% \definecolor{pal-accent}{HTML}{2D6A2D}
+% \definecolor{pal-dot}{HTML}{D4DDD0}
+% \definecolor{pal-heading}{HTML}{2D3A2D}
+% \definecolor{pal-subtle}{HTML}{5A6B5A}
+
+% ----------------------------------------------------------------------------
+% TIER 2: ROLES
+% ----------------------------------------------------------------------------
+% Maps palette → broad functional groups. Override a line here to
+% redirect an entire category. For example, to make all box lines
+% use the accent color: \colorlet{role-box-light}{pal-accent}
+% ----------------------------------------------------------------------------
+
+\colorlet{role-bg}{pal-bg}
+\colorlet{role-text}{pal-text}
+\colorlet{role-box-light}{pal-structure}
+\colorlet{role-box-dark}{pal-depth}
+\colorlet{role-accent}{pal-accent}
+\colorlet{role-dot}{pal-dot}
+\colorlet{role-heading}{pal-heading}
+\colorlet{role-subtle}{pal-subtle}
+
+% ----------------------------------------------------------------------------
+% TIER 3: ELEMENTS
+% ----------------------------------------------------------------------------
+% Every visual element in the CV has its own color name.
+% Templates reference ONLY these names.
+%
+% Grouped by region. To override one element, change its \colorlet
+% to point at any palette, role, or custom color.
+% ----------------------------------------------------------------------------
+
+% --- Page -------------------------------------------------------------------
+\colorlet{page-bg}{role-bg}                  % page background
+\colorlet{content-bg}{role-bg}               % colorbox masking dots behind text
+
+% --- Body text --------------------------------------------------------------
+\colorlet{text-body}{role-text}              % default body text
+\colorlet{text-heading}{role-heading}        % section titles in box borders
+\colorlet{text-subtle}{role-subtle}          % dates, locations, secondary info
+\colorlet{text-bold}{role-text}              % bold text in content
+
+% --- Header (full-width name/title/contact bar) ----------------------------
+\colorlet{header-single}{role-box-light}     % ┌ ─ │  (top, left edges)
+\colorlet{header-double}{role-box-dark}      % ╖ ║ ╘ ═ ╝  (right, bottom edges)
+\colorlet{header-dot}{role-dot}              % · fill inside header
+\colorlet{header-name}{role-text}            % name text
+\colorlet{header-title}{role-text}           % title text
+\colorlet{header-contact}{role-text}         % email, phone, linkedin, location
+\colorlet{header-cursor}{role-accent}        % ▌ cursor block after name
+\colorlet{header-prompt}{role-accent}        % >_ before title
+
+% --- Left column boxes (Summary, Experience, etc.) -------------------------
+\colorlet{left-single}{role-box-light}       % ┌ ─ │  (top, left edges)
+\colorlet{left-double}{role-box-dark}        % ╖ ║ ╘ ═ ╝  (right, bottom edges)
+\colorlet{left-dot}{role-dot}                % · fill inside box
+\colorlet{left-title}{role-heading}          % section title in top border
+
+% --- Right column boxes (Skills, Education, References) --------------------
+\colorlet{right-single}{role-box-light}      % ┌ ─ │  (top, left edges)
+\colorlet{right-double}{role-box-dark}       % ╖ ║ ╘ ═ ╝  (right, bottom edges)
+\colorlet{right-dot}{role-dot}               % · fill inside box
+\colorlet{right-title}{role-heading}         % section title in top border
+
+% --- Full-width boxes (span entire grid width) ----------------------------
+\colorlet{full-single}{role-box-light}       % ┌ ─ │  (top, left edges)
+\colorlet{full-double}{role-box-dark}        % ╖ ║ ╘ ═ ╝  (right, bottom edges)
+\colorlet{full-dot}{role-dot}                % · fill inside box
+\colorlet{full-title}{role-heading}          % section title in top border
+
+% --- Accent group (bullets, branches, highlights) --------------------------
+%     All the same color by default. Override individually to split.
+\colorlet{tree-branch}{role-accent}          % ├ │  connectors in treelist
+\colorlet{tree-last}{role-accent}            % └  final item connector
+\colorlet{skill-bullet}{role-accent}         % ▸  in skill lists
+\colorlet{progress-fill}{role-accent}        % ███  filled bar
+\colorlet{progress-empty}{role-dot}          % ░░░  empty bar
+\colorlet{progress-bracket}{role-text}       % [ ]  bar frame
+\colorlet{job-marker}{role-accent}           % ▪ ⬥  in job headers
+\colorlet{timeline-dot}{role-accent}         % ·  timeline spine marker
+\colorlet{timeline-line}{role-text}          % │  timeline continuation
+
+% --- Structural details inside content -------------------------------------
+\colorlet{thin-rule}{role-dot}               % dotted separator line
+\colorlet{clean-bullet}{role-dot}            % · in reference/education lists
+
+% ----------------------------------------------------------------------------
+% DRAWING SHORTCUTS — used by templates for box-drawing characters
+% ----------------------------------------------------------------------------
+% Per-region shortcuts keep template code readable while referencing
+% the correct Tier 3 element color. Templates never use raw color names.
+%
+% Naming: H=Header, L=Left, R=Right, F=Full; SL=single-line,
+%         DL=double-line, DOT=dot-fill, C=cursor/accent
+% ----------------------------------------------------------------------------
+
+% --- Header drawing ---------------------------------------------------------
+\newcommand{\HSL}{\color{header-single}}   % ┌ ─ │  (top, left edges)
+\newcommand{\HDL}{\color{header-double}}   % ╖ ║ ╘ ═ ╝  (right, bottom edges)
+\newcommand{\HDOT}{\color{header-dot}}     % · fill inside header
+\newcommand{\HC}{\color{header-cursor}}    % ▌ cursor block, >_ prompt
+
+% --- Left box drawing -------------------------------------------------------
+\newcommand{\LSL}{\color{left-single}}     % ┌ ─ │
+\newcommand{\LDL}{\color{left-double}}     % ╖ ║ ╘ ═ ╝
+\newcommand{\LDOT}{\color{left-dot}}       % · fill
+
+% --- Right box drawing ------------------------------------------------------
+\newcommand{\RSL}{\color{right-single}}    % ┌ ─ │
+\newcommand{\RDL}{\color{right-double}}    % ╖ ║ ╘ ═ ╝
+\newcommand{\RDOT}{\color{right-dot}}      % · fill
+
+% --- Full-width box drawing -------------------------------------------------
+\newcommand{\FSL}{\color{full-single}}     % ┌ ─ │
+\newcommand{\FDL}{\color{full-double}}     % ╖ ║ ╘ ═ ╝
+\newcommand{\FDOT}{\color{full-dot}}       % · fill
+
+% --- Apply page defaults ----------------------------------------------------
+\color{text-body}
+\pagecolor{page-bg}
+
+
+% ============================================================================
+% §5  SPACING
+% ============================================================================
+% Every vertical and horizontal gap in the CV as a named value.
+% All expressed in grid units (\TPVertModule or \TPHorizModule)
+% or em units relative to the current font.
+%
+% To tighten or loosen the entire CV, adjust these values.
+% Templates and components use ONLY these names.
+% ============================================================================
+
+% --- Content line height ----------------------------------------------------
+%     Body text baselineskip as a multiple of one grid row.
+%     1.0 = text sits exactly on grid lines (tight).
+%     1.2 = 20% extra leading (current default, readable).
+\newcommand{\ContentLeading}{1.2}
+
+% --- Vertical gaps (in grid rows) -------------------------------------------
+%     Used via \vspace{\GapFoo\TPVertModule} in components.
+%     All values are multiples of one grid row for grid compliance.
+\newcommand{\GapAfterSubHead}{0.1}          % below SubHead before content
+\newcommand{\GapBeforeSubHead}{0.5}         % above SubHead (between sections)
+\newcommand{\GapBeforeDesc}{0.1}            % above italic description block
+\newcommand{\GapAfterDesc}{0.5}             % below italic description block
+\newcommand{\GapHeaderToContent}{1}          % rows between header bottom and first box
+\newcommand{\GapBoxToBox}{1}                % between stacked boxes (LeftBoxGap)
+\newcommand{\GapJobToJob}{1}                % between job entries (full row)
+\newcommand{\GapSkillCat}{0.5}             % between skill categories
+\newcommand{\GapTimelineItem}{0.5}          % between timeline entries
+
+% --- Tree list spacing (grid row multipliers) -------------------------------
+%     Used as: \vspace{\TreeTopSkip\TPVertModule} or topsep=\TreeTopSkip\TPVertModule
+%     Expressed as grid-row fractions, same pattern as \GapFoo constants above.
+\newcommand{\TreeTopSkip}{0.25}            % space above first tree item
+\newcommand{\TreeBotSkip}{0.1}             % space below last tree item
+\newcommand{\TreeItemSep}{0.1}             % between tree items in explist
+
+% --- Content bleed/nudge (REMOVED) -----------------------------------------
+%     No longer needed. The background overlay now covers all dots
+%     inside the border deterministically (innerW × bodyRows).
+%     Content is positioned via box padding (§6) only.
+
+
+% ============================================================================
+% §6  BOX GEOMETRY
+% ============================================================================
+% Widths, padding, and column positions. All in grid units.
+%
+% MASTER PARAMETERS (change these to reshape the layout):
+%   \HeaderHeight ......... Rows the header occupies
+%   \HeaderContactSep ..... Dot-space gaps between contact items in header
+%   \LeftBoxWidth ......... Width of the left column in grid cols
+%   \ColumnGap ............ Gap between left and right columns in grid cols
+%   \Left/Right/FullBoxPad* Padding inside boxes (cols or rows)
+%
+% DERIVED VALUES (do not edit — computed from master params):
+%   \HeaderWidth .......... = \GridCols (full page width)
+%   \ContentStartY ........ = \HeaderHeight + 1 (row where boxes begin)
+%   \RightBoxWidth ........ = \GridCols - \LeftBoxWidth - \ColumnGap
+%   \RightColX ............ = \LeftBoxWidth + \ColumnGap
+%   \FullBoxWidth ......... = \GridCols (full page width)
+%   \*ContentWidth ........ = box - padding (no scaling)
+% ============================================================================
+
+% --- Header (master) -------------------------------------------------------
+\newcommand{\HeaderHeight}{6}               % rows the header occupies
+\newcommand{\HeaderContactSep}{3}           % dot-spaces between contact items
+
+% --- Column layout (master) ------------------------------------------------
+\newcommand{\LeftBoxWidth}{63}              % left column width in grid cols
+\newcommand{\ColumnGap}{1.7}                  % gap between columns in grid cols
+
+% --- Left column padding (master) ------------------------------------------
+\newcommand{\LeftBoxPadLeft}{3}             % left padding (cols)
+\newcommand{\LeftBoxPadRight}{3}            % right padding (cols)
+\newcommand{\LeftBoxPadTop}{1.2}              % top padding (rows inside box)
+\newcommand{\LeftBoxPadBot}{1}              % bottom padding (rows inside box)
+
+% --- Right column padding (master) -----------------------------------------
+\newcommand{\RightBoxPadLeft}{3}            % left padding (cols)
+\newcommand{\RightBoxPadRight}{3}           % right padding (cols)
+\newcommand{\RightBoxPadTop}{1.2}             % top padding (rows inside box)
+\newcommand{\RightBoxPadBot}{1}             % bottom padding (rows inside box)
+
+% --- Full-width box padding (master) ---------------------------------------
+\newcommand{\FullBoxPadLeft}{3}             % left padding (cols)
+\newcommand{\FullBoxPadRight}{3}            % right padding (cols)
+\newcommand{\FullBoxPadTop}{1.2}              % top padding (rows inside box)
+\newcommand{\FullBoxPadBot}{1}              % bottom padding (rows inside box)
+
+% --- Derived layout values (do not edit) ------------------------------------
+%     Invariant: LeftBoxWidth + ColumnGap + RightBoxWidth = GridCols
+%     This guarantees the left box touches the left margin and the
+%     right box touches the right margin, with the gap between them.
+\newcommand{\HeaderWidth}{\GridCols}                                        % margin to margin
+\newcommand{\ContentStartY}{\fpeval{\HeaderHeight + \GapHeaderToContent}}    % first row below header
+\newcommand{\RightBoxWidth}{\fpeval{\GridCols - \LeftBoxWidth - \ColumnGap}}% right column width
+\newcommand{\RightColX}{\fpeval{\LeftBoxWidth + \ColumnGap}}               % right column X origin
+
+% --- Derived: full-width box ------------------------------------------------
+\newcommand{\FullBoxWidth}{\GridCols}         % spans the entire grid
+\pgfmathsetmacro{\tmpFullBoxWidth}{\GridCols} % numeric copy for pgfmath below
+
+% --- Derived content widths (do not edit) -----------------------------------
+%     How many grid columns the content minipage spans (box minus padding).
+\pgfmathsetmacro{\LeftContentWidth}{(\LeftBoxWidth - \LeftBoxPadLeft - \LeftBoxPadRight) * \ContentWidthScale}
+\pgfmathsetmacro{\RightContentWidth}{(\RightBoxWidth - \RightBoxPadLeft - \RightBoxPadRight) * \ContentWidthScale}
+\pgfmathsetmacro{\FullContentWidth}{(\tmpFullBoxWidth - \FullBoxPadLeft - \FullBoxPadRight) * \ContentWidthScale}
+
+
+% ============================================================================
+% §7  CONTENT FORMATTING
+% ============================================================================
+% Lists, tree branches, timelines, helper commands.
+% All colors and spacing reference §4 and §5 names.
+% ============================================================================
+
+% ----------------------------------------------------------------------------
+% §7.1  BASE UTILITIES
+% ----------------------------------------------------------------------------
+
+% \Repeat{N}{char} — repeat a character N times
+\newcount\repeatcount
+\newcommand{\Repeat}[2]{%
+    \repeatcount=#1\relax
+    \loop\ifnum\repeatcount>0
+        #2\advance\repeatcount by -1
+    \repeat
+}
+
+% \GridVSpace{N} — insert N grid rows of vertical space
+\newcommand{\GridVSpace}[1]{%
+    \vspace{\fpeval{#1 * \TPVertModule}pt}%
+}
+
+% \CountTextCols{text} — count characters (for monospace centering math)
+\newcommand{\CountTextCols}[1]{%
+    \StrLen{#1}[\measuredColsInt]%
+}
+
+% ----------------------------------------------------------------------------
+% §7.2  TYPOGRAPHY PRESETS
+% ----------------------------------------------------------------------------
+% These commands set up the full typographic environment for content
+% inside boxes. They enforce grid-aligned baselines so text doesn't
+% drift relative to the dot texture.
+%
+% Usage in templates:
+%   \LeftTypography   — inside left box content areas
+%   \RightTypography  — inside right box content areas
+%   \CurrentTypography — alias set by each box template before rendering,
+%                        so treelist/timeline/skilllist use the correct
+%                        font size regardless of which column they're in.
+% ----------------------------------------------------------------------------
+
+% \CurrentTypography defaults to Left; each box template overrides it.
+\newcommand{\CurrentTypography}{\LeftTypography}
+
+\newcommand{\LeftTypography}{%
+    \aile\ContentSizeLeft\raggedright%
+    \baselineskip=\ContentLeading\TPVertModule\relax%
+    \lineskip=0pt\relax%
+    \lineskiplimit=0pt\relax%
+    \parskip=0pt\relax%
+}
+
+\newcommand{\RightTypography}{%
+    \aile\ContentSizeRight\raggedright%
+    \baselineskip=\ContentLeading\TPVertModule\relax%
+    \lineskip=0pt\relax%
+    \lineskiplimit=0pt\relax%
+    \parskip=0pt\relax%
+}
+
+\newcommand{\FullTypography}{%
+    \aile\ContentSizeLeft\raggedright%
+    \baselineskip=\ContentLeading\TPVertModule\relax%
+    \lineskip=0pt\relax%
+    \lineskiplimit=0pt\relax%
+    \parskip=0pt\relax%
+}
+
+% ----------------------------------------------------------------------------
+% §7.3  TREE LIST — Bulleted items with │ continuation lines
+% ----------------------------------------------------------------------------
+% The signature look: ├ / └ connectors with vertical │ continuation
+% for multi-line items. Used in experience sections.
+%
+% Usage:
+%   \begin{treelist}
+%     \TreeItem{First point that can wrap to multiple lines}
+%     \TreeItem{Second point}
+%     \TreeLast{Final point — uses └ instead of ├}
+%   \end{treelist}
+%
+% The connector color comes from tree-branch / tree-last (§4 Tier 3).
+% Spacing comes from \TreeTopSkip, \TreeBotSkip (§5).
+% ----------------------------------------------------------------------------
+
+\newsavebox{\TreeWidthBox}
+\newlength{\TreePrefixW}
+\setlength{\TreePrefixW}{2em}
+\newlength{\ContentPrefixIndent}
+
+\AtBeginDocument{%
+    \sbox{\TreeWidthBox}{\mono├─}%
+    \ifdim\wd\TreeWidthBox>1pt
+        \global\TreePrefixW=\wd\TreeWidthBox\relax
+    \fi
+    \sbox{\TreeWidthBox}{\mono┌─}%
+    \global\ContentPrefixIndent=\dimexpr\wd\TreeWidthBox - 3\TPHorizModule\relax
+}
+
+\newsavebox{\TreeMeasureBox}
+
+\newenvironment{treelist}{%
+    \par\vspace{\TreeTopSkip\TPVertModule}%
+}{%
+    \par\vspace{\TreeBotSkip\TPVertModule}%
+}
+
+\newcommand{\TreeItem}[1]{%
+    \par\noindent\hspace{\ContentPrefixIndent}%
+    \sbox{\TreeMeasureBox}{%
+        \parbox[t]{\dimexpr\linewidth-\ContentPrefixIndent-\TreePrefixW\relax}{%
+            \CurrentTypography #1%
+        }%
+    }%
+    \pgfmathtruncatemacro{\TreeCont}{%
+        max(0, ceil((\ht\TreeMeasureBox + \dp\TreeMeasureBox) / (\ContentLeading*\TPVertModule)) - 1)%
+    }%
+    \hbox to \TreePrefixW{\vtop{%
+        \baselineskip=\ContentLeading\TPVertModule\relax%
+        \lineskip=0pt\relax%
+        \lineskiplimit=0pt\relax%
+        \hbox to \TreePrefixW{\CurrentTypography\mono{\color{tree-branch}\vphantom{Xg}├╴ }\hfil}%
+        \ifnum\TreeCont>0\relax
+            \foreach \n in {1,...,\TreeCont}{%
+                \hbox to \TreePrefixW{\mono{\color{tree-branch}│}\hfil}%
+            }%
+        \fi
+    }\hss}%
+    \vtop{%
+        \hsize=\dimexpr\linewidth-\ContentPrefixIndent-\TreePrefixW\relax
+        \CurrentTypography #1\par
+    }%
+}
+
+\newcommand{\TreeLast}[1]{%
+    \par\noindent\hspace{\ContentPrefixIndent}%
+    \sbox{\TreeMeasureBox}{%
+        \parbox[t]{\dimexpr\linewidth-\ContentPrefixIndent-\TreePrefixW\relax}{%
+            \CurrentTypography #1%
+        }%
+    }%
+    \pgfmathtruncatemacro{\TreeCont}{%
+        max(0, ceil((\ht\TreeMeasureBox + \dp\TreeMeasureBox) / (\ContentLeading*\TPVertModule)) - 1)%
+    }%
+    \hbox to \TreePrefixW{\vtop{%
+        \baselineskip=\ContentLeading\TPVertModule\relax%
+        \lineskip=0pt\relax%
+        \lineskiplimit=0pt\relax%
+        \hbox to \TreePrefixW{\CurrentTypography\mono{\color{tree-last}\vphantom{Xg}└╴ }\hfil}%
+        \ifnum\TreeCont>0\relax
+            \foreach \n in {1,...,\TreeCont}{\hbox to \TreePrefixW{\hfil}}%
+        \fi
+    }\hss}%
+    \vtop{%
+        \hsize=\dimexpr\linewidth-\ContentPrefixIndent-\TreePrefixW\relax
+        \CurrentTypography #1\par
+    }%
+}
+
+% ----------------------------------------------------------------------------
+% §7.4  SKILL LIST — Triangular bullet items for right column
+% ----------------------------------------------------------------------------
+% Usage:
+%   \begin{skilllist}
+%     \item PyTorch, HF Transformers
+%     \item SapBERT, Lifelines
+%   \end{skilllist}
+% ----------------------------------------------------------------------------
+
+\newlist{skilllist}{itemize}{1}
+\setlist[skilllist]{%
+    label={\color{skill-bullet}\mono▸},
+    labelwidth=\TreePrefixW,
+    labelsep=0pt,
+    leftmargin=\dimexpr\ContentPrefixIndent+\TreePrefixW\relax,
+    align=left,
+    itemsep=0pt,
+    parsep=0pt,
+    topsep=\TreeTopSkip\TPVertModule
+}
+
+% ----------------------------------------------------------------------------
+% §7.5  EXP LIST — Tree-branch bullets (legacy, simpler than treelist)
+% ----------------------------------------------------------------------------
+% For cases where you want ├─ bullets without the multi-line │ logic.
+%
+% Usage:
+%   \begin{explist}
+%     \item First point
+%     \lastitem Final point  ← uses └─
+%   \end{explist}
+% ----------------------------------------------------------------------------
+
+\newlist{explist}{itemize}{1}
+\setlist[explist]{%
+    label={\color{text-body}\mono├─},
+    labelwidth=\TreePrefixW,
+    labelsep=0pt,
+    leftmargin=\dimexpr\ContentPrefixIndent+\TreePrefixW\relax,
+    align=left,
+    itemsep=\TreeItemSep\TPVertModule,
+    parsep=0pt,
+    topsep=\TreeTopSkip\TPVertModule,
+    after=\vspace{\TreeBotSkip\TPVertModule},
+}
+
+\newcommand{\lastitem}{\item[{\color{text-body}\mono└─}]}
+
+% ----------------------------------------------------------------------------
+% §7.6  CLEAN LIST — Minimal dot bullets for references/education
+% ----------------------------------------------------------------------------
+
+\newlist{cleanlist}{itemize}{1}
+\setlist[cleanlist]{%
+    label={\color{clean-bullet}\mono·},
+    leftmargin=1.2em,
+    itemsep=\TreeItemSep\TPVertModule,
+    parsep=0pt,
+    topsep=\TreeTopSkip\TPVertModule,
+}
+
+% ----------------------------------------------------------------------------
+% §7.7  TIMELINE — Vertical spine with · markers
+% ----------------------------------------------------------------------------
+% Used for education history. A dot marks each entry, with │ continuation
+% for multi-line content.
+%
+% Usage:
+%   \begin{timeline}
+%     \TimelineItem{MSc AI and Digital Health \\ Westminster \\ 2024--2026}
+%     \TimelineLast{NQF 6: Product Design \\ Cape Peninsula \\ 2005--2009}
+%   \end{timeline}
+% ----------------------------------------------------------------------------
+
+\newsavebox{\TLMeasureBox}
+\newlength{\TLPrefixW}
+\AtBeginDocument{%
+    \global\TLPrefixW=\TreePrefixW\relax
+}
+
+\newenvironment{timeline}{%
+    \par\vspace{\TreeTopSkip\TPVertModule}%
+}{%
+    \par\vspace{\TreeBotSkip\TPVertModule}%
+}
+
+% TimelineItemFirst — first item in a timeline (cancels environment top space)
+\newcommand{\TimelineItemFirst}[2]{%
+    % #1 = heading text, #2 = body content
+    \vspace{-\TreeTopSkip\TPVertModule}%
+    \par\noindent\hspace{\ContentPrefixIndent}%
+    \sbox{\TLMeasureBox}{%
+        \parbox[t]{\dimexpr\linewidth-\ContentPrefixIndent-\TLPrefixW\relax}{%
+            \CurrentTypography {\HeadingOutdent\HeadingSize\color{text-bold} #1}\\#2%
+        }%
+    }%
+    \pgfmathtruncatemacro{\TLCont}{%
+        max(0, ceil((\ht\TLMeasureBox + \dp\TLMeasureBox) / (\ContentLeading*\TPVertModule)) - 1)%
+    }%
+    \hbox to \TLPrefixW{\vtop{%
+        \baselineskip=\ContentLeading\TPVertModule\relax%
+        \lineskip=0pt\relax%
+        \lineskiplimit=0pt\relax%
+        \hbox to \TLPrefixW{\CurrentTypography\mono{\color{timeline-dot}\vphantom{Xg}·}\hfil}%
+        \ifnum\TLCont>0\relax
+            \foreach \n in {1,...,\TLCont}{%
+                \hbox to \TLPrefixW{\mono{\color{timeline-line}│}\hfil}%
+            }%
+        \fi
+    }\hss}%
+    \vtop{%
+        \hsize=\dimexpr\linewidth-\ContentPrefixIndent-\TLPrefixW\relax
+        \CurrentTypography {\HeadingOutdent\HeadingSize\color{text-bold} #1}\\#2\par
+    }%
+}
+
+\newcommand{\TimelineItem}[2]{%
+    % #1 = heading text, #2 = body content
+    \par\noindent\hspace{\ContentPrefixIndent}%
+    \sbox{\TLMeasureBox}{%
+        \parbox[t]{\dimexpr\linewidth-\ContentPrefixIndent-\TLPrefixW\relax}{%
+            \CurrentTypography {\HeadingOutdent\HeadingSize\color{text-bold} #1}\\#2%
+        }%
+    }%
+    \pgfmathtruncatemacro{\TLCont}{%
+        max(0, ceil((\ht\TLMeasureBox + \dp\TLMeasureBox) / (\ContentLeading*\TPVertModule)) - 1)%
+    }%
+    \hbox to \TLPrefixW{\vtop{%
+        \baselineskip=\ContentLeading\TPVertModule\relax%
+        \lineskip=0pt\relax%
+        \lineskiplimit=0pt\relax%
+        \hbox to \TLPrefixW{\CurrentTypography\mono{\color{timeline-dot}\vphantom{Xg}·}\hfil}%
+        \ifnum\TLCont>0\relax
+            \foreach \n in {1,...,\TLCont}{%
+                \hbox to \TLPrefixW{\mono{\color{timeline-line}│}\hfil}%
+            }%
+        \fi
+    }\hss}%
+    \vtop{%
+        \hsize=\dimexpr\linewidth-\ContentPrefixIndent-\TLPrefixW\relax
+        \CurrentTypography {\HeadingOutdent\HeadingSize\color{text-bold} #1}\\#2\par
+    }%
+}
+
+\newcommand{\TimelineLast}[2]{%
+    % #1 = heading text, #2 = body content
+    \par\noindent\hspace{\ContentPrefixIndent}%
+    \sbox{\TLMeasureBox}{%
+        \parbox[t]{\dimexpr\linewidth-\ContentPrefixIndent-\TLPrefixW\relax}{%
+            \CurrentTypography {\HeadingOutdent\HeadingSize\color{text-bold} #1}\\#2%
+        }%
+    }%
+    \pgfmathtruncatemacro{\TLCont}{%
+        max(0, ceil((\ht\TLMeasureBox + \dp\TLMeasureBox) / (\ContentLeading*\TPVertModule)) - 1)%
+    }%
+    \hbox to \TLPrefixW{\vtop{%
+        \baselineskip=\ContentLeading\TPVertModule\relax%
+        \lineskip=0pt\relax%
+        \lineskiplimit=0pt\relax%
+        \hbox to \TLPrefixW{\CurrentTypography\mono{\color{timeline-dot}\vphantom{Xg}·}\hfil}%
+        \ifnum\TLCont>0\relax
+            \foreach \n in {1,...,\TLCont}{\hbox to \TLPrefixW{\hfil}}%
+        \fi
+    }\hss}%
+    \vtop{%
+        \hsize=\dimexpr\linewidth-\ContentPrefixIndent-\TLPrefixW\relax
+        \CurrentTypography {\HeadingOutdent\HeadingSize\color{text-bold} #1}\\#2\par
+    }%
+}
+
+% ----------------------------------------------------------------------------
+% §7.8  COMPONENT HELPERS
+% ----------------------------------------------------------------------------
+% Reusable formatting commands for content inside components.
+% All colors and spacing pull from centralised values.
+% ----------------------------------------------------------------------------
+
+% \HeadingOutdent — pull subheading-style text half a grid column left
+%   Used by \SubHead, \SkillCat, \TimelineItem, \TimelineLast.
+\newcommand{\HeadingOutdent}{\hspace{-0.75\TPHorizModule}}
+
+% SubHeadFirst — first subheading in a box (no top gap)
+\newcommand{\SubHeadFirst}[1]{%
+    {\HeadingOutdent\HeadingSize\color{text-bold} #1}%
+    \vspace{\GapAfterSubHead\TPVertModule}%
+}
+
+% SubHead — bold subsection title (e.g. "Platform Architecture & Orchestration")
+\newcommand{\SubHead}[1]{%
+    \vspace{\GapBeforeSubHead\TPVertModule}%
+    {\HeadingOutdent\HeadingSize\color{text-bold} #1}%
+    \vspace{\GapAfterSubHead\TPVertModule}%
+}
+
+% Role — job/project title with right-aligned date
+%   \Role{Scientific Literature Processing Platform}{2024--Present}
+\newcommand{\Role}[2]{%
+    {\bfseries\color{text-bold} #1}\hfill%
+    {\SecondarySize\color{text-subtle} #2}%
+}
+
+% Org — company/institution with right-aligned location
+%   \Org{University of Westminster}{London, UK}
+\newcommand{\Org}[2]{%
+    {\SecondarySize\color{text-body} #1\hfill\color{text-subtle} #2}%
+}
+
+% Desc — italic description paragraph
+%   \Desc{Integrated platform for ingesting...}
+\newcommand{\Desc}[1]{%
+    \vspace{\GapBeforeDesc\TPVertModule}%
+    {\SecondarySize\itshape\color{text-body} #1}%
+    \vspace{\GapAfterDesc\TPVertModule}%
+}
+
+% SkillCatFirst — first category in a box (cancels any top space)
+\newcommand{\SkillCatFirst}[1]{%
+    \vspace{-\TreeTopSkip\TPVertModule}%
+    {\HeadingOutdent\HeadingSize\color{text-bold} #1}%
+}
+
+% SkillCat — bold category label in skills section
+%   \SkillCat{GPU / Compute}
+\newcommand{\SkillCat}[1]{%
+    {\HeadingOutdent\HeadingSize\color{text-bold} #1}%
+}
+
+% ThinRule — dotted separator
+\newcommand{\ThinRule}{%
+    \vspace{0.25\TPVertModule}%
+    {\color{thin-rule}\mono\Repeat{20}{·}}%
+    \vspace{0.25\TPVertModule}%
+}
+
+% ProgressBar — terminal-style progress indicator with optional label
+%   \ProgressBar{70}{Some label}  →  [███████░░░] Some label
+%   \ProgressBar{70}{}            →  [███████░░░]
+\newcommand{\ProgressBar}[2]{%
+    \pgfmathtruncatemacro{\filled}{floor(#1 / 10)}%
+    \pgfmathtruncatemacro{\empty}{10 - \filled}%
+    {\mono\SecondarySize%
+        {\color{progress-bracket}[}%
+        {\color{progress-fill}\Repeat{\filled}{█}}%
+        {\color{progress-empty}\Repeat{\empty}{░}}%
+        {\color{progress-bracket}]}%
+    }%
+    \if\relax\detokenize{#2}\relax\else%
+        {\SecondarySize\color{text-body}\ #2}%
+    \fi%
+}
+
+% JobSep — vertical space between job entries
+\newcommand{\JobSep}{\vspace{\GapJobToJob\TPVertModule}}
+
+% JobHead — full job header block
+%   \JobHead{Role Title}{Company Name}{2020--2023}{London, UK}
+\newcommand{\JobHead}[4]{%
+    {\HeadingOutdent\HeadingSize\color{text-bold} #1}%
+    \hfill{\SecondarySize{\color{job-marker}▪}\,{\color{text-subtle}#4}}\\
+    {\HeadingOutdent\SecondarySize\color{text-body} #2%
+    \hfill{\color{job-marker}⬥}\,{\color{text-subtle}#3}}%
+}
+
+
+% ============================================================================
+% §8  DEBUG
+% ============================================================================
+
+\newcommand{\ShowGridInfo}{%
+    Grid: \GridCols\ cols × \GridRows\ rows |
+    Cell: \CellWidth mm × \CellHeight mm |
+    Margin: \MarginH mm (H) × \MarginV mm (V) |
+    Font: \GridFontSize pt%
+}
+
+\newcommand{\DebugGrid}{%
+    \begin{textblock}{\GridCols}(0,\fpeval{\GridRows - 1})%
+        \tiny\mono\color{text-subtle} \ShowGridInfo%
+    \end{textblock}%
+}
+
+\endinput

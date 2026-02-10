@@ -1,0 +1,167 @@
+% ============================================================================
+% TEMPLATES/FULLBOX.TEX — Full-Width Auto-Height Boxes
+% ============================================================================
+%
+% ZERO hardcoded values. All parameters come from preamble.tex:
+%   §6  \FullBoxWidth (= \GridCols), \FullBoxPad*, \FullContentWidth
+%   §4  \FSL, \FDL, \FDOT  (full-width box color shortcuts)
+%   §7  \FullTypography, \Repeat
+%   §4  content-bg  (Tier 3 color for content background)
+%
+% PURPOSE:
+%   A single box that spans the entire grid width (\GridCols columns).
+%   Use this when a section should not be split into left/right columns —
+%   for example, a standalone skills table, a full-width summary, or any
+%   content that benefits from the full page width.
+%
+% SETUP (in canvas.tex):
+%   \FullBoxInit{0}{\ContentStartY}
+%
+% USAGE:
+%   \FullBox{SECTION TITLE}{components/your-content.tex}
+%   \FullBoxGap{\GapBoxToBox}
+%   \FullBox{NEXT TITLE}{components/next-content.tex}
+%
+% HOW IT WORKS:
+%   - Same auto-height measurement as leftbox/rightbox.
+%   - Box width is always \FullBoxWidth (= \GridCols = full page).
+%   - Has its own Y cursor (\FullPosY) so it doesn't interfere with
+%     the left/right column cursors.
+%   - After each box, Y auto-advances for the next box.
+%
+% STRUCTURAL CONSTANTS (derived from box-drawing pattern, not params):
+%   7 = border/dot/space char count in title row
+%   2 = left + right border columns (│ and ║)
+%
+% ============================================================================
+
+% ----------------------------------------------------------------------------
+% POSITION TRACKING (internal — set via \FullBoxInit)
+% ----------------------------------------------------------------------------
+\newcommand{\FullPosX}{0}               % Current X position
+\newcommand{\FullPosY}{0}               % Current Y position
+
+% Initialize position — CALL THIS FIRST in canvas.tex
+\newcommand{\FullBoxInit}[2]{%
+    % #1 = X position (grid columns from left, typically 0)
+    % #2 = Y position (grid rows from top, typically \ContentStartY)
+    \xdef\FullPosX{#1}%
+    \xdef\FullPosY{#2}%
+}
+
+% ----------------------------------------------------------------------------
+% CONTENT MEASUREMENT BOX (internal)
+% ----------------------------------------------------------------------------
+\newsavebox{\FullMeasureBox}
+
+% ----------------------------------------------------------------------------
+% MAIN BOX COMMAND
+% ----------------------------------------------------------------------------
+% Usage: \FullBox{TITLE}{content-file.tex}
+%
+\newcommand{\FullBox}[2]{%
+    % #1 = TITLE (appears in top border)
+    % #2 = content file path (e.g., components/skills-table.tex)
+    %
+    % =========================================================================
+    % STEP 1: MEASURE CONTENT HEIGHT
+    % =========================================================================
+    \renewcommand{\CurrentTypography}{\FullTypography}%
+    \savebox{\FullMeasureBox}{%
+        \begin{minipage}{\FullContentWidth\TPHorizModule}%
+            \FullTypography%
+            \input{#2}%
+        \end{minipage}%
+    }%
+    %
+    % Calculate rows needed
+    \pgfmathsetmacro{\rawHeightPt}{\ht\FullMeasureBox + \dp\FullMeasureBox}%
+    \pgfmathtruncatemacro{\contentRows}{ceil(\rawHeightPt / \TPVertModule)}%
+    %
+    % Total box height = top border + padding + content + padding + bottom border
+    \pgfmathtruncatemacro{\boxRows}{1 + \FullBoxPadTop + \contentRows + \FullBoxPadBot + 1}%
+    \pgfmathtruncatemacro{\bodyRows}{\boxRows - 2}%
+    \pgfmathtruncatemacro{\innerW}{\FullBoxWidth - 2}%
+    %
+    % Debug output (visible in .log file)
+    \typeout{FULLBOX [\detokenize{#1}]: rawPt=\rawHeightPt, contentRows=\contentRows, boxRows=\boxRows}%
+    %
+    % =========================================================================
+    % STEP 2: DRAW BOX FRAME
+    % =========================================================================
+    \StrLen{#1}[\titleLen]%
+    \pgfmathtruncatemacro{\dashCount}{\FullBoxWidth - 7 - \titleLen}%
+    %
+    \begin{textblock}{\FullBoxWidth}(\FullPosX,\FullPosY)%
+        \mono%
+        % Kill all automatic spacing — critical for deterministic heights
+        \baselineskip=0pt\relax%
+        \lineskip=0pt\relax%
+        \lineskiplimit=0pt\relax%
+        \parskip=0pt\relax%
+        \offinterlineskip%
+        %
+        % Top border with title
+        \vbox to \TPVertModule{\vss\hbox{{\FSL┌─·} \textbf{#1} {\FSL·\Repeat{\dashCount}{─}}{\FDL╖}}\vss}%
+        % Body rows (dot-filled)
+        \foreach \n in {1,...,\bodyRows}{%
+            \vbox to \TPVertModule{\vss\hbox{{\FSL│}{\FDOT\Repeat{\innerW}{·}}{\FDL║}}\vss}%
+        }%
+        % Bottom border
+        \vbox to \TPVertModule{\vss\hbox{{\FDL╘\Repeat{\innerW}{═}╝}}\vss}%
+    \end{textblock}%
+    %
+    % =========================================================================
+    % STEP 3: PLACE CONTENT (two layers: background overlay + text)
+    % =========================================================================
+    %
+    % Layer 1: Background rectangle covering dots inside the border,
+    %          inset by 1 grid cell on each side so 1 dot column/row stays visible.
+    \pgfmathsetmacro{\bgX}{\FullPosX + 2}%
+    \pgfmathsetmacro{\bgY}{\FullPosY + 2}%
+    \pgfmathtruncatemacro{\bgW}{\innerW - 3}%
+    \pgfmathtruncatemacro{\bgH}{\bodyRows - 3}%
+    \begin{textblock}{\bgW}(\bgX,\bgY)%
+        \colorbox{content-bg}{\makebox[\bgW\TPHorizModule][l]{\rule{0pt}{\bgH\TPVertModule}}}%
+    \end{textblock}%
+    %
+    % Layer 2: Content text, positioned with padding offsets on top of the bg.
+    \pgfmathsetmacro{\contentX}{\FullPosX + \FullBoxPadLeft}%
+    \pgfmathsetmacro{\contentY}{\FullPosY + 1 + \FullBoxPadTop}%
+    \begin{textblock}{\FullContentWidth}(\contentX,\contentY)%
+        \begin{minipage}{\FullContentWidth\TPHorizModule}%
+            \FullTypography%
+            \input{#2}%
+        \end{minipage}%
+    \end{textblock}%
+    %
+    % =========================================================================
+    % STEP 4: UPDATE Y FOR NEXT BOX
+    % =========================================================================
+    \pgfmathsetmacro{\newY}{\FullPosY + \boxRows}%
+    \xdef\FullPosY{\newY}%
+}
+
+% ----------------------------------------------------------------------------
+% GAP COMMAND
+% ----------------------------------------------------------------------------
+% Usage: \FullBoxGap{1}     % Add 1 row gap
+%        \FullBoxGap{0.5}   % Add half row gap
+%
+\newcommand{\FullBoxGap}[1]{%
+    \pgfmathsetmacro{\newY}{\FullPosY + #1}%
+    \xdef\FullPosY{\newY}%
+}
+
+% ----------------------------------------------------------------------------
+% DEBUG: Show current Y position
+% ----------------------------------------------------------------------------
+% Usage: \FullBoxDebug      % Shows red "Y=xxx" at current position
+%
+\newcommand{\FullBoxDebug}{%
+    \begin{textblock}{20}(\FullPosX,\FullPosY)%
+        \tiny\mono\color{red}Y=\FullPosY%
+    \end{textblock}%
+}
+
+\endinput

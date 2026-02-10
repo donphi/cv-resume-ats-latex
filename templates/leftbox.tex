@@ -1,0 +1,161 @@
+% ============================================================================
+% TEMPLATES/LEFTBOX.TEX — Left Column Auto-Height Boxes
+% ============================================================================
+%
+% ZERO hardcoded values. All parameters come from preamble.tex:
+%   §6  \LeftBoxWidth, \LeftBoxPad*, \LeftContentWidth
+%   §4  \LSL, \LDL, \LDOT  (left box color shortcuts)
+%   §7  \LeftTypography, \Repeat
+%   §4  content-bg  (Tier 3 color for content background)
+%
+% SETUP (in canvas.tex):
+%   \LeftBoxInit{0}{\ContentStartY}
+%
+% USAGE:
+%   \LeftBox{SECTION TITLE}{components/your-content.tex}
+%   \LeftBoxGap{1}
+%   \LeftBox{NEXT TITLE}{components/next-content.tex}
+%
+% HOW IT WORKS:
+%   - Box origin (0,0) is TOP-LEFT corner of the drawable area
+%   - X increases rightward, Y increases downward
+%   - Each box auto-measures content height
+%   - Y position auto-updates after each box
+%
+% STRUCTURAL CONSTANTS (derived from box-drawing pattern, not params):
+%   7 = border/dot/space char count in title row: ┌(1) ─(1) ·(1) space(1) TITLE space(1) ·(1) ╖(1)
+%   2 = left + right border columns (│ and ║)
+%
+% ============================================================================
+
+% ----------------------------------------------------------------------------
+% POSITION TRACKING (internal — set via \LeftBoxInit)
+% ----------------------------------------------------------------------------
+\newcommand{\LeftPosX}{0}               % Current X position
+\newcommand{\LeftPosY}{0}               % Current Y position
+
+% Initialize position — CALL THIS FIRST in canvas.tex
+\newcommand{\LeftBoxInit}[2]{%
+    % #1 = X position (grid columns from left)
+    % #2 = Y position (grid rows from top)
+    \xdef\LeftPosX{#1}%
+    \xdef\LeftPosY{#2}%
+}
+
+% ----------------------------------------------------------------------------
+% CONTENT MEASUREMENT BOX (internal)
+% ----------------------------------------------------------------------------
+\newsavebox{\LeftMeasureBox}
+
+% ----------------------------------------------------------------------------
+% MAIN BOX COMMAND
+% ----------------------------------------------------------------------------
+% Usage: \LeftBox{TITLE}{content-file.tex}
+%
+\newcommand{\LeftBox}[2]{%
+    % #1 = TITLE (appears in top border)
+    % #2 = content file path (e.g., components/summary.tex)
+    %
+    % =========================================================================
+    % STEP 1: MEASURE CONTENT HEIGHT
+    % =========================================================================
+    \renewcommand{\CurrentTypography}{\LeftTypography}%
+    \savebox{\LeftMeasureBox}{%
+        \begin{minipage}{\LeftContentWidth\TPHorizModule}%
+            \LeftTypography%
+            \input{#2}%
+        \end{minipage}%
+    }%
+    %
+    % Calculate rows needed
+    \pgfmathsetmacro{\rawHeightPt}{\ht\LeftMeasureBox + \dp\LeftMeasureBox}%
+    \pgfmathtruncatemacro{\contentRows}{ceil(\rawHeightPt / \TPVertModule)}%
+    %
+    % Total box height = top border + padding + content + padding + bottom border
+    \pgfmathtruncatemacro{\boxRows}{1 + \LeftBoxPadTop + \contentRows + \LeftBoxPadBot + 1}%
+    \pgfmathtruncatemacro{\bodyRows}{\boxRows - 2}%
+    \pgfmathtruncatemacro{\innerW}{\LeftBoxWidth - 2}%
+    %
+    % Debug output (visible in .log file)
+    \typeout{LEFTBOX [\detokenize{#1}]: rawPt=\rawHeightPt, contentRows=\contentRows, boxRows=\boxRows}%
+
+    %
+    % =========================================================================
+    % STEP 2: DRAW BOX FRAME
+    % =========================================================================
+    \StrLen{#1}[\titleLen]%
+    \pgfmathtruncatemacro{\dashCount}{\LeftBoxWidth - 7 - \titleLen}%
+    %
+    \begin{textblock}{\LeftBoxWidth}(\LeftPosX,\LeftPosY)%
+        \mono%
+        % Kill all automatic spacing — critical for deterministic heights
+        \baselineskip=0pt\relax%
+        \lineskip=0pt\relax%
+        \lineskiplimit=0pt\relax%
+        \parskip=0pt\relax%
+        \offinterlineskip%
+        %
+        % Top border with title
+        \vbox to \TPVertModule{\vss\hbox{{\LSL┌─·} \textbf{#1} {\LSL·\Repeat{\dashCount}{─}}{\LDL╖}}\vss}%
+        % Body rows (dot-filled)
+        \foreach \n in {1,...,\bodyRows}{%
+            \vbox to \TPVertModule{\vss\hbox{{\LSL│}{\LDOT\Repeat{\innerW}{·}}{\LDL║}}\vss}%
+        }%
+        % Bottom border
+        \vbox to \TPVertModule{\vss\hbox{{\LDL╘\Repeat{\innerW}{═}╝}}\vss}%
+    \end{textblock}%
+    %
+    % =========================================================================
+    % STEP 3: PLACE CONTENT (two layers: background overlay + text)
+    % =========================================================================
+    %
+    % Layer 1: Background rectangle covering dots inside the border,
+    %          inset by 1 grid cell on each side so 1 dot column/row stays visible.
+    \pgfmathsetmacro{\bgX}{\LeftPosX + 2}%
+    \pgfmathsetmacro{\bgY}{\LeftPosY + 2}%
+    \pgfmathtruncatemacro{\bgW}{\innerW - 3}%
+    \pgfmathtruncatemacro{\bgH}{\bodyRows - 3}%
+    \begin{textblock}{\bgW}(\bgX,\bgY)%
+        \colorbox{content-bg}{\makebox[\bgW\TPHorizModule][l]{\rule{0pt}{\bgH\TPVertModule}}}%
+    \end{textblock}%
+    %
+    % Layer 2: Content text, positioned with padding offsets on top of the bg.
+    \pgfmathsetmacro{\contentX}{\LeftPosX + \LeftBoxPadLeft}%
+    \pgfmathsetmacro{\contentY}{\LeftPosY + 1 + \LeftBoxPadTop}%
+    \begin{textblock}{\LeftContentWidth}(\contentX,\contentY)%
+        \begin{minipage}{\LeftContentWidth\TPHorizModule}%
+            \LeftTypography%
+            \input{#2}%
+        \end{minipage}%
+    \end{textblock}%
+    %
+    % =========================================================================
+    % STEP 4: UPDATE Y FOR NEXT BOX
+    % =========================================================================
+    \pgfmathsetmacro{\newY}{\LeftPosY + \boxRows}%
+    \xdef\LeftPosY{\newY}%
+}
+
+% ----------------------------------------------------------------------------
+% GAP COMMAND
+% ----------------------------------------------------------------------------
+% Usage: \LeftBoxGap{1}     % Add 1 row gap
+%        \LeftBoxGap{0.5}   % Add half row gap
+%
+\newcommand{\LeftBoxGap}[1]{%
+    \pgfmathsetmacro{\newY}{\LeftPosY + #1}%
+    \xdef\LeftPosY{\newY}%
+}
+
+% ----------------------------------------------------------------------------
+% DEBUG: Show current Y position
+% ----------------------------------------------------------------------------
+% Usage: \LeftBoxDebug      % Shows red "Y=xxx" at current position
+%
+\newcommand{\LeftBoxDebug}{%
+    \begin{textblock}{20}(\LeftPosX,\LeftPosY)%
+        \tiny\mono\color{red}Y=\LeftPosY%
+    \end{textblock}%
+}
+
+\endinput

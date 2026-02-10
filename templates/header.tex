@@ -1,0 +1,152 @@
+% ============================================================================
+% TEMPLATES/HEADER.TEX — Full-Width CV Header
+% ============================================================================
+%
+% ZERO hardcoded values. All parameters come from preamble.tex:
+%   §6  \HeaderWidth, \HeaderHeight, \HeaderContactSep
+%   §4  \HSL, \HDL, \HDOT, \HC  (header color shortcuts)
+%   §7  \CountTextCols, \Repeat
+%
+% USAGE (in canvas.tex):
+%   \CVHeader{X}{Y}
+%       {\StoredName}{\StoredTitle}
+%       {\StoredEmail}{\StoredPhone}
+%       {\StoredLinkedin}{\StoredLocation}
+%
+% STRUCTURAL CONSTANTS (derived from box-drawing pattern, not params):
+%   8 = border/dot/space char count in name row:  ┌(1) ·(1) space(1) NAME ▌(1) space(1) ·(1) ╖(1) = 7 fixed + 1 cursor
+%   6 = border/dot/space char count in title row: │(1) ·(1) space(1) >_(2) TITLE space(1) ·(1) ║(1) — but see titlePadLeft/Right
+%   2 = left + right border columns (│ and ║)
+%   4 = per-contact-item fixed chars: space(1) ITEM space(1) + dot-space overlap
+%
+% ============================================================================
+
+% ----------------------------------------------------------------------------
+% MAIN HEADER COMMAND
+% ----------------------------------------------------------------------------
+\newcommand{\CVHeader}[8]{%
+    % #1 = X, #2 = Y
+    % #3 = NAME, #4 = TITLE
+    % #5 = email, #6 = phone, #7 = linkedin, #8 = location
+    %
+    % =========================================================================
+    % STEP 1: COUNT ALL TEXT LENGTHS (character count for monospace)
+    % =========================================================================
+    %
+    \CountTextCols{#3}%
+    \pgfmathtruncatemacro{\nameLen}{\measuredColsInt}%
+    %
+    \CountTextCols{#4}%
+    \pgfmathtruncatemacro{\titleLen}{\measuredColsInt}%
+    %
+    \CountTextCols{#5}%
+    \pgfmathtruncatemacro{\emailLen}{\measuredColsInt}%
+    %
+    \CountTextCols{#6}%
+    \pgfmathtruncatemacro{\phoneLen}{\measuredColsInt}%
+    %
+    \CountTextCols{#7}%
+    \pgfmathtruncatemacro{\linkedinLen}{\measuredColsInt}%
+    %
+    \CountTextCols{#8}%
+    \pgfmathtruncatemacro{\locationLen}{\measuredColsInt}%
+    %
+    % =========================================================================
+    % STEP 2: DEBUG OUTPUT (visible in .log file)
+    % =========================================================================
+    \typeout{==================================================}%
+    \typeout{HEADER DEBUG: HeaderWidth = \HeaderWidth}%
+    \typeout{HEADER DEBUG: NAME = #3}%
+    \typeout{HEADER DEBUG: NAME char count = \nameLen}%
+    \typeout{HEADER DEBUG: TITLE = #4}%
+    \typeout{HEADER DEBUG: TITLE char count = \titleLen}%
+    \typeout{HEADER DEBUG: email=\emailLen, phone=\phoneLen, linkedin=\linkedinLen, location=\locationLen}%
+    %
+    % =========================================================================
+    % STEP 3: CALCULATE DASH COUNTS
+    % =========================================================================
+    %
+    % NAME LINE: ╒(1) + dashes + ·(1) + space(1) + NAME + space(1) + ·(1) + dashes + ╕(1)
+    % Fixed = 7 chars, so dashes = HeaderWidth - 7 - nameLen
+    %
+    \pgfmathtruncatemacro{\nameDashTotal}{\HeaderWidth - 7 - \nameLen}%
+    \pgfmathtruncatemacro{\nameDashLeft}{\nameDashTotal / 2}%
+    \pgfmathtruncatemacro{\nameDashRight}{\nameDashTotal - \nameDashLeft}%
+    %
+    \typeout{HEADER DEBUG: NAME dashes total=\nameDashTotal, left=\nameDashLeft, right=\nameDashRight}%
+    \typeout{HEADER DEBUG: NAME check: 1+\nameDashLeft+1+1+\nameLen+1+1+\nameDashRight+1 = \the\numexpr1+\nameDashLeft+1+1+\nameLen+1+1+\nameDashRight+1\relax}%
+    %
+    % TITLE LINE: ├(1) + dashes + ·(1) + space(1) + TITLE + space(1) + ·(1) + dashes + ┤(1)
+    % Fixed = 6 chars
+    %
+    \pgfmathtruncatemacro{\titleDashTotal}{\HeaderWidth - 6 - \titleLen}%
+    \pgfmathtruncatemacro{\titleDashLeft}{\titleDashTotal / 2}%
+    \pgfmathtruncatemacro{\titleDashRight}{\titleDashTotal - \titleDashLeft}%
+    %
+    \typeout{HEADER DEBUG: TITLE dashes total=\titleDashTotal, left=\titleDashLeft, right=\titleDashRight}%
+    \typeout{HEADER DEBUG: TITLE check: 1+\titleDashLeft+1+1+\titleLen+1+1+\titleDashRight+1 = \the\numexpr1+\titleDashLeft+1+1+\titleLen+1+1+\titleDashRight+1\relax}%
+    %
+    % CONTACT LINE: │(1) + dots + · email · + sep + · phone · + sep + · linkedin · + sep + · location · + dots + ║(1)
+    % Each item block: space(1) + ITEM + space(1) = 2 + itemLen
+    %
+    \pgfmathtruncatemacro{\contactContent}{%
+        (2 + \emailLen) + \HeaderContactSep + %
+        (2 + \phoneLen) + \HeaderContactSep + %
+        (2 + \linkedinLen) + \HeaderContactSep + %
+        (2 + \locationLen)%
+    }%
+    \pgfmathtruncatemacro{\contactDashTotal}{\HeaderWidth - 2 - \contactContent}%
+    \pgfmathtruncatemacro{\contactDashLeft}{\contactDashTotal / 2}%
+    \pgfmathtruncatemacro{\contactDashRight}{\contactDashTotal - \contactDashLeft}%
+    %
+    \typeout{HEADER DEBUG: CONTACT content=\contactContent, dashes total=\contactDashTotal, left=\contactDashLeft, right=\contactDashRight}%
+    %
+    \pgfmathtruncatemacro{\innerW}{\HeaderWidth - 2}%
+    \typeout{HEADER DEBUG: innerW = \innerW}%
+    \typeout{==================================================}%
+    %
+    % =========================================================================
+    % STEP 4: DRAW HEADER
+    % =========================================================================
+    \begin{textblock}{\HeaderWidth}(#1,#2)%
+        \mono%
+        \baselineskip=0pt\relax%
+        \lineskip=0pt\relax%
+        \lineskiplimit=0pt\relax%
+        \parskip=0pt\relax%
+        \offinterlineskip%
+        %
+        % ROW 0: Name
+        \vbox to \TPVertModule{\vss\hbox{%
+            {\HSL┌\Repeat{\nameDashLeft}{─}}· \textbf{#3}{\HC▌} ·{\HSL\Repeat{\nameDashRight}{─}}{\HDL╖}%
+        }\vss}%
+        %
+        % ROW 1: Dot-filled empty
+        \vbox to \TPVertModule{\vss\hbox{{\HSL│}{\HDOT\Repeat{\innerW}{·}}{\HDL║}}\vss}%
+        %
+        % ROW 2: Title (centered, dot-filled)
+        \pgfmathtruncatemacro{\titlePadLeft}{(\innerW - \titleLen - 4) / 2}%
+        \pgfmathtruncatemacro{\titlePadRight}{\innerW - \titleLen - 4 - \titlePadLeft}%
+        \vbox to \TPVertModule{\vss\hbox{%
+            {\HSL│}{\HDOT\Repeat{\titlePadLeft}{·}}{ }{\HC>\_}\textbf{#4}{ }{\HDOT\Repeat{\titlePadRight}{·}}{\HDL║}%
+        }\vss}%
+        %
+        % ROW 3: Dot-filled empty
+        \vbox to \TPVertModule{\vss\hbox{{\HSL│}{\HDOT\Repeat{\innerW}{·}}{\HDL║}}\vss}%
+        %
+        % ROW 4: Contact info (dot-filled)
+        \vbox to \TPVertModule{\vss\hbox{%
+            {\HSL│}{\HDOT\Repeat{\contactDashLeft}{·}}%
+            { }#5{ }{\HDOT\Repeat{\HeaderContactSep}{·}}%
+            { }#6{ }{\HDOT\Repeat{\HeaderContactSep}{·}}%
+            { }#7{ }{\HDOT\Repeat{\HeaderContactSep}{·}}%
+            { }#8{ }%
+            {\HDOT\Repeat{\contactDashRight}{·}}{\HDL║}%
+        }\vss}%
+        %
+        % ROW 5: Bottom border
+        \vbox to \TPVertModule{\vss\hbox{{\HDL╘\Repeat{\innerW}{═}╝}}\vss}%
+    \end{textblock}%
+}
+
+\endinput

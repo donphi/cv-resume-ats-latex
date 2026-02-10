@@ -1,0 +1,39 @@
+% ============================================================================
+% COMPONENTS/research_experience.TEX - Research Experience Content
+% ============================================================================
+% Uses: \SubHead, \Desc, \GapBeforeSubHead, \GapAfterSubHead (from preamble §5/§7)
+%       treelist environment with \TreeItem, \TreeLast (from preamble §7.3)
+% ============================================================================
+
+\SubHeadFirst{Scientific Literature Processing Platform}
+{University of Westminster, MSc AI \& Digital Health | 2024--Present}
+
+\Desc{Integrated platform for ingesting, structuring, validating, and indexing scientific literature at scale. Designed as a single deterministic system with reproducibility, provenance, and hardware efficiency as architectural requirements.}
+
+\SubHead{Platform Architecture \& Orchestration}
+\begin{treelist}
+    \TreeItem{23-stage deterministic pipeline orchestrated via Prefect with distributed execution through RabbitMQ worker queues and hardware-aware compute profiles}
+    \TreeItem{6,636 documents / 100,034 pages at 99.91\% success, producing contract-valid structured JSON with full provenance (manifests, hashing, structured logging, stage-level contracts)}
+    \TreeItem{Sustained dual NVIDIA B200 GPUs at 90--96\% utilisation and CPUs at 56--65\% for 52 continuous hours, generating \textasciitilde1 TB across 2 million files with zero pipeline failure}
+    \TreeLast{181 Docker containers and 11 NLP models concurrently; all hyperparameters grid-searched with confusion matrix validation for high F1. No models fine-tuned---performance achieved through architectural discipline}
+\end{treelist}
+
+\SubHead{Ontology \& Search Layer}
+\begin{treelist}
+    \TreeItem{Parsed and normalised biomedical ontologies (MONDO, HPO, EFO) into queryable graph structures (DuckDB) for defensible disease labelling and filtering}
+    \TreeLast{Parallel-processing ETL to index semantically chunked documents and extracted entities into Elasticsearch and PostgreSQL for high-recall retrieval and analytics}
+\end{treelist}
+
+\SubHead{Human-in-the-Loop Validation \& Quality Assurance}
+\begin{treelist}
+    \TreeItem{SapBERT embedding similarity to propose and rank candidate feature aliases, with Flask application serving ML-ranked suggestions for expert approval/rejection}
+    \TreeItem{Evaluation methodology using stratified sampling and confusion matrices to quantify extraction and linking accuracy and guide thresholding}
+    \TreeLast{Outputs feed verified training datasets for downstream model evaluation---closing the loop from raw document to validated, reusable knowledge}
+\end{treelist}
+
+\SubHead{UK Biobank Large-Scale Data Extraction}
+\begin{treelist}
+    \TreeItem{Faculty stated extracting the full UK Biobank feature set across the 500,000-participant cohort was impossible. Read the entire DNA Nexus manual and identified a viable extraction path}
+    \TreeItem{Actual feature space was approximately 50,000 (not the assumed 10,000) including all arrays and instances. Pulled the complete dataset---50,000 features \texttimes\ 500,000 participants---into 15 parquet files totalling 42 GB}
+    \TreeLast{Optimised extraction from 15 hours to 30 minutes---a 30\texttimes\ improvement through architectural understanding of the platform, not brute compute}
+\end{treelist}
