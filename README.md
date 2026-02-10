@@ -46,7 +46,7 @@ Build flags:
 content/          <-- YOUR DATA. The only place you edit.
 generated/        <-- Auto-built LaTeX files. Do not hand-edit.
 engine/           <-- Layout templates (header, boxes, pageflow). Advanced only.
-fonts/            <-- Iosevka typefaces + build parameters. Pre-included.
+fonts/            <-- Iosevka typefaces (auto-downloaded on first build) + build parameters.
 scripts/          <-- Python generator. Reads content/, writes generated/ + ats_main.tex.
 doc/              <-- Deep-dive documentation (grid sizing, ATS requirements).
 preamble.tex      <-- Styling hyperparameters (fonts, colours, spacing, grid). Advanced only.
@@ -245,13 +245,17 @@ Changing `\GridFontSize` rescales the entire grid. See `doc/iosevka_sizing.md` f
 
 ## Fonts
 
-Three Iosevka families are pre-included in `fonts/iosevka/`:
+Three Iosevka families are used (15 TTF files total, ~150 MB):
 
 | Family | Role | Style |
 |--------|------|-------|
 | **Iosevka Extended** | Grid font (box borders, structural characters) | Monospace |
 | **Iosevka Aile** | Body text (bullets, descriptions) | Proportional sans-serif |
 | **Iosevka Etoile** | Display/headings (available, currently unused) | Proportional serif |
+
+**Fonts are downloaded automatically** from the [Iosevka GitHub releases](https://github.com/be5invis/Iosevka/releases) the first time you build. The script `scripts/fetch-fonts.sh` downloads only the 15 files needed, caches them in `fonts/iosevka/`, and skips the download on subsequent builds. No manual font installation required.
+
+The font version is pinned in `scripts/fetch-fonts.sh` (currently v34.1.0). To update, change `IOSEVKA_VERSION`, delete the cached TTFs, and rebuild.
 
 Source: [github.com/be5invis/Iosevka](https://github.com/be5invis/Iosevka) (SIL Open Font License).
 
