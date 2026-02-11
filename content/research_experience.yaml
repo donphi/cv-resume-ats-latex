@@ -12,38 +12,32 @@
 #                       (auto-built from company + role + dates if omitted)
 
 entries:
-  - role: "MSc Researcher --- AI and Digital Health"
-    company: "University of Westminster"
-    dates: "Sep 2024 -- Present"
-    location: "London, UK"
-    project_title: "Scientific Literature Processing Platform"
-    designed_subtitle: "University of Westminster, MSc AI & Digital Health | 2024--Present"
+  - role: "Principal Investigator --- Nu-Metal Fusion Architecture"
+    company: "Limp Bizkit R&D Division"
+    dates: "Aug 1994 -- Dec 2003"
+    location: "Jacksonville, FL"
+    project_title: "The Nookie Protocol: Genre Fusion at Scale"
+    designed_subtitle: "Limp Bizkit R&D, Principal Investigator | 1994--2003"
     description: >-
-      Integrated platform for ingesting, structuring, validating, and indexing
-      scientific literature at scale. Designed as a single deterministic system
-      with reproducibility, provenance, and hardware efficiency as architectural
-      requirements.
+      Multi-year research programme investigating the feasibility of fusing
+      hip-hop vocal delivery, punk energy systems, and heavy metal
+      instrumentation into a single reproducible audio output pipeline.
+      Results shipped commercially as 'Significant Other' and 'Chocolate
+      Starfish and the Hot Dog Flavored Water'---combined 30M+ units.
     subsections:
-      - heading: "Platform Architecture & Orchestration"
+      - heading: "Genre Fusion Pipeline Architecture"
         bullets:
-          - "23-stage deterministic pipeline orchestrated via Prefect with distributed execution through RabbitMQ worker queues and hardware-aware compute profiles"
-          - "6,636 documents / 100,034 pages at 99.91% success, producing contract-valid structured JSON with full provenance (manifests, hashing, structured logging, stage-level contracts)"
-          - "Sustained dual NVIDIA B200 GPUs at 90--96% utilisation and CPUs at 56--65% for 52 continuous hours, generating ~1 TB across 2 million files with zero pipeline failure"
-          - "181 Docker containers and 11 NLP models concurrently; all hyperparameters grid-searched with confusion matrix validation for high F1. No models fine-tuned---performance achieved through architectural discipline"
+          - "Designed a 4-input audio merge pipeline (vocals, turntables, guitars, rhythm section) with real-time crossfade and genre-weight parameters tuneable per track"
+          - "Achieved genre-blend ratios of 40% hip-hop / 35% metal / 25% punk on 'Rollin'' and 'Nookie'---validated by 15M+ single sales and 200+ weeks on Billboard charts"
+          - "Pioneered DJ-integrated metal performance architecture with DJ Lethal, processing 120+ BPM turntable samples synchronised to drop-D guitar tuning in real time"
 
-      - heading: "Ontology & Search Layer"
+      - heading: "Large-Scale Audience Response Testing"
         bullets:
-          - "Parsed and normalised biomedical ontologies (MONDO, HPO, EFO) into queryable graph structures (DuckDB) for defensible disease labelling and filtering"
-          - "Parallel-processing ETL to index semantically chunked documents and extracted entities into Elasticsearch and PostgreSQL for high-recall retrieval and analytics"
+          - "Conducted the largest live audience stress test in nu-metal history at Woodstock '99: 400,000 concurrent participants, 72-hour sustained engagement window"
+          - "Measured peak crowd energy output during 'Break Stuff' at an estimated 2.4 MW of kinetic force across the mosh pit zone---the highest recorded metric for the genre"
+          - "Post-event analysis identified critical failure modes in venue crowd-flow architecture; published findings informally via MTV interview (1999)"
 
-      - heading: "Human-in-the-Loop Validation & Quality Assurance"
+      - heading: "Cross-Platform Distribution & Format Compatibility"
         bullets:
-          - "SapBERT embedding similarity to propose and rank candidate feature aliases, with Flask application serving ML-ranked suggestions for expert approval/rejection"
-          - "Evaluation methodology using stratified sampling and confusion matrices to quantify extraction and linking accuracy and guide thresholding"
-          - "Outputs feed verified training datasets for downstream model evaluation---closing the loop from raw document to validated, reusable knowledge"
-
-      - heading: "UK Biobank Large-Scale Data Extraction"
-        bullets:
-          - "Faculty stated extracting the full UK Biobank feature set across the 500,000-participant cohort was impossible. Read the entire DNA Nexus manual and identified a viable extraction path"
-          - "Actual feature space was approximately 50,000 (not the assumed 10,000) including all arrays and instances. Pulled the complete dataset---50,000 features × 500,000 participants---into 15 parquet files totalling 42 GB"
-          - "Optimised extraction from 15 hours to 30 minutes---a 30× improvement through architectural understanding of the platform, not brute compute"
+          - "Validated output compatibility across CD, cassette, MiniDisc, and early MP3 distribution channels simultaneously---one of the first acts to release a free MP3 single ('N 2 Gether Now') to drive physical sales"
+          - "Reverse-engineered Napster distribution metrics to quantify piracy impact; used data to negotiate improved royalty structures with Interscope"

@@ -42,8 +42,9 @@ done
 # ── Clean mode ───────────────────────────────────────────────────
 if $CLEAN; then
   echo "Cleaning build artifacts..."
-  rm -f *.aux *.log *.out *.fls *.fdb_latexmk *.synctex.gz *.pdf
-  rm -f main_ats.tex boxheights.dat
+  rm -rf build/
+  rm -f *.pdf boxheights.dat
+  rm -f main_ats.tex
   rm -f generated/.build-meta generated/settings.tex generated/canvas.tex
   rm -f generated/*-p[0-9]*.tex 2>/dev/null || true
   echo "Done."
@@ -54,13 +55,19 @@ fi
 export DOCKER_UID="$(id -u)"
 export DOCKER_GID="$(id -g)"
 
-# ── Build images if requested ────────────────────────────────────
-if $REBUILD; then
-  if $BUILD_DESIGNED; then
+# ── Build images (always on first run, --no-cache with -b) ──────
+if $BUILD_DESIGNED; then
+  if $REBUILD; then
     docker compose build --no-cache
+  else
+    docker compose build
   fi
-  if $BUILD_ATS; then
+fi
+if $BUILD_ATS; then
+  if $REBUILD; then
     docker compose -f docker-compose.ats.yml build --no-cache
+  else
+    docker compose -f docker-compose.ats.yml build
   fi
 fi
 

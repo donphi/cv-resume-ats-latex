@@ -13,7 +13,7 @@ Reads:
     content/certifications.yaml
     content/publications.yaml
 
-Writes (designed CV — consumed by canvas.tex):
+Writes (designed CV — consumed by generated/canvas.tex):
     generated/contact.tex
     generated/acronym.tex
     generated/summary.tex

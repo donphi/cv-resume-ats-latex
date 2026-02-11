@@ -39,18 +39,24 @@ cp content/contact.yaml.example content/contact.yaml
 #   fred-durst-cv-ats.pdf    (ATS-optimised)
 ```
 
+### Build Flags
+
 | Flag | What it does |
-|------|-------------|
+|------|--------------|
 | `./build.sh` | Build both designed + ATS PDFs |
 | `./build.sh -d` | Designed CV only |
 | `./build.sh -a` | ATS CV only |
 | `./build.sh -b` | Force-rebuild Docker images first |
 | `./build.sh -c` | Remove all build artifacts |
 
-- **A4** builds produce `yourname-cv.pdf` and `yourname-cv-ats.pdf`
-- **US Letter** builds produce `yourname-resume.pdf` and `yourname-resume-ats.pdf`
+### Output Files
 
-Fonts are downloaded automatically on first build (~15 seconds). Subsequent builds skip the download.
+| Paper Size | Designed | ATS-Optimised |
+|------------|----------|---------------|
+| **A4** (UK/EU) | `yourname-cv.pdf` | `yourname-cv-ats.pdf` |
+| **US Letter** | `yourname-resume.pdf` | `yourname-resume-ats.pdf` |
+
+> 💡 Fonts are downloaded automatically on first build (~15 seconds). Subsequent builds skip the download.
 
 ---
 
@@ -119,32 +125,70 @@ The designed version uses a **character-cell grid** — every element is placed 
 
 ---
 
-## What Each Folder Does
+## Project Structure
 
 ```
-content/          <-- YOUR DATA. The only place you edit.
-  layout.yaml     <-- Section order and column assignments (left/right/full).
-generated/        <-- Auto-built LaTeX files. Do not hand-edit.
-engine/           <-- Layout templates (header, boxes, pageflow). Advanced only.
-fonts/            <-- Iosevka typefaces (auto-downloaded on first build) + build parameters.
-scripts/          <-- Python generator, layout engine, font downloader.
-doc/              <-- Deep-dive docs (grid sizing, ATS requirements, images).
-preamble.tex      <-- Styling hyperparameters (fonts, colours, spacing, grid). Advanced only.
-canvas.tex        <-- Auto-generated redirect. Do not hand-edit (see layout.yaml).
-main.tex          <-- Entry point for LuaLaTeX. Do not edit.
+📦 cv-resume-ats-latex/
+│
+├── 📁 content/ ·································· ✏️ YOUR CV TEXT GOES HERE
+│   │
+│   │   Each file below maps to one section of your CV.
+│   │   Edit these YAML files with your own information —
+│   │   the build system handles all LaTeX formatting.
+│   │
+│   ├── contact.yaml ····························· Name, email, phone, links, paper size
+│   ├── summary.yaml ····························· Professional summary paragraph
+│   ├── work_experience.yaml ····················· Jobs: role, company, dates, bullets
+│   ├── education.yaml ··························· Degrees, institutions, dates
+│   ├── skills.yaml ······························ Skill categories and items
+│   ├── research_experience.yaml ················· Research roles (optional)
+│   ├── certifications.yaml ······················ Certifications (optional)
+│   ├── publications.yaml ························ Papers, patents, albums (optional)
+│   ├── acronyms.yaml ···························· ATS acronym expansions
+│   └── layout.yaml ······························ Section order and column placement
+│
+├── 📁 engine/ ··································· 🔧 Layout templates (advanced users)
+│   ├── preamble.tex ····························· Styling: fonts, colours, spacing, grid
+│   ├── canvas.tex ······························· Auto-generated redirect — do not edit
+│   ├── header.tex ······························· Header template
+│   ├── leftbox.tex ······························ Left column box template
+│   ├── rightbox.tex ····························· Right column box template
+│   ├── fullbox.tex ······························ Full-width box template
+│   └── pageflow.tex ····························· Page break + header repeat logic
+│
+├── 📁 generated/ ································ 🤖 Auto-built .tex files — do not edit
+├── 📁 build/ ···································· 🗑️ LaTeX intermediate files — gitignored
+├── 📁 fonts/ ···································· 🔤 Iosevka typefaces (auto-downloaded)
+├── 📁 scripts/ ·································· ⚙️ Python generator, layout engine
+├── 📁 doc/ ······································ 📖 Deep-dive docs (grid sizing, ATS)
+│
+├── main.tex ····································· Entry point for designed CV
+├── main_ats.tex ································· Entry point for ATS CV (auto-generated)
+├── build.sh ····································· Build script
+├── Dockerfile ··································· Designed CV builder
+├── Dockerfile.ats ······························· ATS CV builder
+├── docker-compose.yml
+├── docker-compose.ats.yml
+└── README.md
 ```
 
 ---
 
-## Editing Your Content (Basic)
+## Editing Your Content
 
-All content lives in `content/*.yaml`. Each file has inline comments explaining the format. Special characters (`&`, `$`, `%`, `#`, `_`, `~`) are auto-escaped — just type plain text.
+All content lives in `content/*.yaml`. Each file has inline comments explaining the format.
+
+> 💡 You can use `&`, `$`, `%`, `#`, `_`, `~` directly in your YAML: the build system escapes them for LaTeX.
 
 Section placement is controlled by `content/layout.yaml` — see [Section Order and Columns](#section-order-and-columns--contentlayoutyaml) below.
 
-### contact.yaml — your details, paper size, and margin
+---
+
+### 📄 contact.yaml — Your Details, Paper Size, and Margin
 
 ```yaml
+# content/contact.yaml
+
 paper_size: "a4"          # "a4" (UK/EU → CV) or "letter" (US → Resume)
 margin: 13.5              # page margin in mm — pick a sweet spot (see below)
 name: "Fred Durst"
@@ -157,27 +201,37 @@ location: "Jacksonville, FL"
 full_cv_url: "https://freddurst.com/cv.pdf"
 ```
 
-**Margin sweet spots** — the designed CV uses a character grid. The margin must be a "sweet spot" so all four sides are equal:
+#### Margin Sweet Spots
+
+The designed CV uses a character grid. The margin must be a "sweet spot" so all four sides are equal:
 
 | Paper size | Sweet spot margins (mm) | Default |
-|------------|------------------------|---------|
+|------------|-------------------------|---------|
 | **A4** (default) | 4.0 · 8.7 · **13.5** · 18.3 · 23.0 · 27.8 | **13.5** |
-| Letter | 3.1 · 7.9 · **12.6** · 17.4 · 22.2 · 26.9 | **12.6** |
+| **Letter** | 3.1 · 7.9 · **12.6** · 17.4 · 22.2 · 26.9 | **12.6** |
 
-See `content/contact.yaml` for the full ASCII diagram explaining how the grid works, or `doc/iosevka_sizing.md` for the deep derivation.
+> 📖 See `content/contact.yaml` for the full ASCII diagram explaining how the grid works, or `doc/iosevka_sizing.md` for the deep derivation.
 
-### summary.yaml — professional summary
+---
+
+### 📄 summary.yaml — Professional Summary
 
 ```yaml
+# content/summary.yaml
+
 text: >-
   Visionary frontman, director, and audio systems architect with 10+ years
   leading high-throughput live performance pipelines processing 20,000+
   concurrent audience nodes per venue. I keep rollin', rollin', rollin'.
 ```
 
-### work_experience.yaml — jobs
+---
+
+### 📄 work_experience.yaml — Jobs
 
 ```yaml
+# content/work_experience.yaml
+
 entries:
   - role: "Lead Vocalist & Chief Nookie Officer"
     company: "Limp Bizkit"
@@ -188,9 +242,13 @@ entries:
       - "Negotiated and closed a $30M record deal with Interscope/Flip Records"
 ```
 
-### education.yaml — degrees and courses
+---
+
+### 📄 education.yaml — Degrees and Courses
 
 ```yaml
+# content/education.yaml
+
 entries:
   - degree: "Certified Red Cap Specialist"
     institution: "New Era Institute of Headwear Sciences"
@@ -200,9 +258,13 @@ entries:
     progress: 100    # optional progress bar (0-100), designed CV only
 ```
 
-### skills.yaml — skill groups
+---
+
+### 📄 skills.yaml — Skill Groups
 
 ```yaml
+# content/skills.yaml
+
 groups:
   - category: "Headwear"
     items:
@@ -211,15 +273,21 @@ groups:
       - "All-weather deployment certified"
 ```
 
-### research_experience.yaml — research roles (optional)
+---
+
+### 📄 research_experience.yaml — Research Roles (Optional)
 
 Like work experience but with subsections for project groupings. Omit or leave `entries: []` to skip.
 
-### certifications.yaml — certifications (optional)
+---
+
+### 📄 certifications.yaml — Certifications (Optional)
 
 Leave `entries: []` to omit. To add:
 
 ```yaml
+# content/certifications.yaml
+
 entries:
   - name: "RIAA Diamond Certification — Significant Other"
     issuer: "Recording Industry Association of America"
@@ -230,11 +298,15 @@ entries:
     year: "1997"
 ```
 
-### publications.yaml — albums, papers, patents (optional)
+---
+
+### 📄 publications.yaml — Albums, Papers, Patents (Optional)
 
 Leave `entries: []` to omit. To add:
 
 ```yaml
+# content/publications.yaml
+
 entries:
   - authors: "Durst, F., Borland, W., Rivers, W., Otto, J., & Lethal, DJ"
     title: "Significant Other"
@@ -247,11 +319,15 @@ entries:
     year: "2002"
 ```
 
-### acronyms.yaml — ATS acronym expansion
+---
+
+### 📄 acronyms.yaml — ATS Acronym Expansion
 
 First occurrence of each acronym in the ATS PDF is expanded. The designed CV is unaffected.
 
 ```yaml
+# content/acronyms.yaml
+
 acronyms:
   A&R: "Artists and Repertoire"
   RIAA: "Recording Industry Association of America"
@@ -266,38 +342,68 @@ acronyms:
 
 You should not need to touch these for basic use, but they are fully documented.
 
+---
+
 ### Paper Size and Margins
 
-Both are set in `content/contact.yaml`. The generator writes them into `generated/settings.tex`, which `preamble.tex` loads before `\documentclass`. Nothing to edit in `preamble.tex`.
+Both are set in `content/contact.yaml`. The generator writes them into `generated/settings.tex`, which `engine/preamble.tex` loads before `\documentclass`. Nothing to edit in `engine/preamble.tex`.
 
-### Colour Themes — preamble.tex section 4
+---
+
+### 🎨 Colour Themes — engine/preamble.tex section 4
 
 Four built-in themes. Uncomment one block, comment the others, rebuild:
 
-- **Cool Blue** (default)
-- **Warm Orange**
-- **Monochrome**
-- **Forest Green**
+| Theme | Description |
+|-------|-------------|
+| **Cool Blue** | Default theme |
+| **Warm Orange** | Warmer accent tones |
+| **Monochrome** | Black and white |
+| **Forest Green** | Nature-inspired |
 
-The colour system has 3 tiers:
+#### Colour System Architecture
 
-1. **Palette** (8 hex values) — the only place hex codes exist. Swap one block to re-theme everything.
-2. **Roles** — maps palette to functional categories (box lines, accents, text). Normally untouched.
-3. **Elements** — every visual element has its own colour name. Override any single one to break it out of its group.
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                                                                 │
+│  TIER 1: Palette ··········· 8 hex values — the only place      │
+│                              hex codes exist. Swap one block    │
+│                              to re-theme everything.            │
+│                                                                 │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  TIER 2: Roles ············· Maps palette to functional         │
+│                              categories (box lines, accents,    │
+│                              text). Normally untouched.         │
+│                                                                 │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  TIER 3: Elements ·········· Every visual element has its       │
+│                              own colour name. Override any      │
+│                              single one to break it out.        │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
 
-### Column Layout — preamble.tex section 6
+---
+
+### 📐 Column Layout — engine/preamble.tex section 6
 
 ```latex
 \newcommand{\LeftBoxWidth}{60}    % left column width in grid columns
-\newcommand{\ColumnGap}{6}       % gap between columns
+\newcommand{\ColumnGap}{6}        % gap between columns
 % RightBoxWidth is auto-derived: GridCols - LeftBoxWidth - ColumnGap
 ```
 
-### Section Order and Columns — content/layout.yaml
+---
 
-> **This is the file you edit to control which sections appear, in what order, and in which column.** Do not edit `canvas.tex` — it is auto-generated on every build and your changes will be overwritten.
+### 📄 Section Order and Columns — content/layout.yaml
+
+> ⚠️ **This is the file you edit to control which sections appear, in what order, and in which column.** Do not edit `engine/canvas.tex` — it is auto-generated on every build and your changes will be overwritten.
 
 ```yaml
+# content/layout.yaml
+
 sections:
   - title: "SUMMARY"
     content: "summary.tex"
@@ -328,26 +434,54 @@ sections:
 
 Sections within the same column are placed top-to-bottom in the order listed. Add, remove, or reorder entries here and rebuild — the layout engine handles page breaks automatically.
 
-### Automatic Page Breaks
+---
+
+### 🔄 Automatic Page Breaks
 
 Page breaks are computed automatically. The build pipeline runs a **two-pass compile**:
 
-1. **Pass 1** — LuaLaTeX measures the exact height of every content box.
-2. **Layout engine** (`scripts/layout.py`) reads those heights, computes where page breaks fall, and splits any overflowing section at a clean boundary (between job entries, skill categories, education items, or research subsections).
-3. **Pass 2** — LuaLaTeX compiles the final PDF with the computed layout.
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                                                                 │
+│  PASS 1 ······················ LuaLaTeX measures the exact      │
+│                                height of every content box      │
+│                                                                 │
+│                                      │                          │
+│                                      ▼                          │
+│                                                                 │
+│  LAYOUT ENGINE ··············· scripts/layout.py reads those    │
+│                                heights, computes where page     │
+│                                breaks fall, and splits any      │
+│                                overflowing section at a clean   │
+│                                boundary (between job entries,   │
+│                                skill categories, education      │
+│                                items, or research subsections)  │
+│                                                                 │
+│                                      │                          │
+│                                      ▼                          │
+│                                                                 │
+│  PASS 2 ······················ LuaLaTeX compiles the final      │
+│                                PDF with the computed layout     │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
 
 You never need to manually insert page breaks or split content files. If your content grows or shrinks, just rebuild and the layout adjusts.
 
-> **`canvas.tex` is off limits.** It is a one-line redirect to `generated/canvas.tex`, which is regenerated on every build. Any manual edits will be silently overwritten.
+> ⛔ **`engine/canvas.tex` is off limits.** It is a one-line redirect to `generated/canvas.tex`, which is regenerated on every build. Any manual edits will be silently overwritten.
 
-### Font Sizing — preamble.tex section 2
+---
+
+### 🔤 Font Sizing — engine/preamble.tex section 2
 
 ```latex
 \newcommand{\GridFontSize}{9}        % base mono font size in pt
 \newcommand{\MonoWidthRatio}{0.6}    % character width:height ratio
 ```
 
-Changing `\GridFontSize` rescales the entire grid. See `doc/iosevka_sizing.md` for the derivation.
+Changing `\GridFontSize` in `engine/preamble.tex` rescales the entire grid.
+
+> 📖 See `doc/iosevka_sizing.md` for the derivation.
 
 ---
 
@@ -361,7 +495,7 @@ Three [Iosevka](https://github.com/be5invis/Iosevka) families are used (15 TTF f
 | **Iosevka Aile** | Body text (bullets, descriptions) | Proportional sans-serif |
 | **Iosevka Etoile** | Display/headings (available, currently unused) | Proportional serif |
 
-**Fonts are downloaded automatically** from the [Iosevka GitHub releases](https://github.com/be5invis/Iosevka/releases) the first time you build. The script `scripts/fetch-fonts.sh` downloads only the 15 files needed, caches them in `fonts/iosevka/`, and skips the download on subsequent builds. No manual font installation required.
+> 💡 **Fonts are downloaded automatically** from the [Iosevka GitHub releases](https://github.com/be5invis/Iosevka/releases) the first time you build. The script `scripts/fetch-fonts.sh` downloads only the 15 files needed, caches them in `fonts/iosevka/`, and skips the download on subsequent builds. No manual font installation required.
 
 The font version is pinned in `scripts/fetch-fonts.sh` (currently v34.1.0). To update, change `IOSEVKA_VERSION`, delete the cached TTFs, and rebuild.
 
@@ -372,40 +506,56 @@ Custom build parameters are stored in `fonts/iosevka/parameters/` for reference 
 ## How It Works
 
 ```
-content/*.yaml                    You edit these
-content/layout.yaml               Section order + column assignments
-       │
-       ▼
-scripts/generate.py               YAML → generated/*.tex (content)
-       │
-       ├──▶ generated/*.tex       Designed CV components
-       ├──▶ generated/settings.tex   Paper size + margin
-       ├──▶ generated/.build-meta    Dynamic output filenames
-       └──▶ main_ats.tex          ATS CV (self-contained)
-       │
-       ▼
-scripts/layout.py --measure       Generate passthrough canvas
-       │
-       ▼
-LuaLaTeX (pass 1)                 Measure box heights → boxheights.dat
-       │
-       ▼
-scripts/layout.py --layout        Compute page breaks, split content
-       │
-       ├──▶ generated/canvas.tex     Layout with page breaks
-       └──▶ generated/*-p1.tex, ...  Split content (if needed)
-       │
-       ▼
-LuaLaTeX (pass 2)                 Final PDF
-       │
-       ▼
-fred-durst-cv.pdf                 Designed CV
-fred-durst-cv-ats.pdf             ATS-optimised CV (separate pipeline)
+
+┌─────────────────────────────────────────────────────────────────┐
+│                      ✏️ you edit these                          │
+│                       ─────────────────                         │
+│                content/*.yaml  +  layout.yaml                   │
+└────────────────────────────────┬────────────────────────────────┘
+                                 │
+                                 ▼
+                    ┌────────────────────────┐
+                    │   scripts/generate.py  │
+                    │      YAML → LaTeX      │
+                    └────────────┬───────────┘
+                                 │
+                                 │  outputs:
+                                 │  ├── generated/*.tex ······ designed CV components
+                                 │  ├── generated/settings.tex · paper size + margin
+                                 │  ├── generated/.build-meta ·· dynamic output filenames
+                                 │  └── main_ats.tex ·········· ATS CV (self-contained)
+                                 │
+                ┌────────────────┴────────────────┐
+                │                                 │
+                ▼                                 ▼
+     ┌─────────────────────┐           ┌─────────────────────┐
+     │    DESIGNED CV      │           │       ATS CV        │
+     │                     │           │                     │
+     │  layout.py --measure│           │      latexmk        │
+     │         │           │           │    main_ats.tex     │
+     │         ▼           │           │         │           │
+     │  LuaLaTeX (pass 1)  │           │         ▼           │
+     │  measure box heights│           │ yourname-cv-ats.pdf │
+     │  → build/boxheights │           └─────────────────────┘
+     │         │           │           
+     │         ▼           │           
+     │  layout.py --layout │
+     │  compute page breaks│
+     │  split overflows    │
+     │         │           │
+     │         ▼           │
+     │  LuaLaTeX (pass 2)  │
+     │    final compile    │
+     │         │           │
+     │         ▼           │
+     │   yourname-cv.pdf   │
+     └─────────────────────┘
 ```
 
 The generator reads plain YAML, escapes special characters for LaTeX, and writes two outputs:
 
 1. **Designed CV**: individual `generated/*.tex` files using custom environments (`treelist`, `timeline`, `skilllist`). The layout engine (`scripts/layout.py`) measures each section's height, computes page breaks, and generates `generated/canvas.tex` which places them in boxes on a character-cell grid with automatic page breaks.
+
 2. **ATS CV**: a single `main_ats.tex` file with plain `\section` / `\itemize` formatting, optimised for applicant tracking system parsers. Acronyms are expanded on first use.
 
 Both outputs are compiled inside Docker containers. No local dependencies beyond Docker.
@@ -414,9 +564,15 @@ Both outputs are compiled inside Docker containers. No local dependencies beyond
 
 ## Requirements
 
-- **Docker** and **Docker Compose** (that's it)
-- No Python, no LaTeX, no fonts to install locally
-- Works on Linux, macOS, and Windows (WSL2)
+| Requirement | Notes |
+|-------------|-------|
+| **Docker** | Required |
+| **Docker Compose** | Required |
+| Python | ❌ Not needed locally |
+| LaTeX | ❌ Not needed locally |
+| Fonts | ❌ Not needed locally |
+
+✅ Works on Linux, macOS, and Windows (WSL2)
 
 ---
 
@@ -424,9 +580,9 @@ Both outputs are compiled inside Docker containers. No local dependencies beyond
 
 | File | Contents |
 |------|----------|
-| `doc/iosevka_sizing.md` | Grid derivation, margin sweet spots, font metrics, column layout math |
-| `doc/ats_requirements.md` | ATS formatting rules and constraints |
-| `doc/ats_check.md` | ATS compliance checklist |
+| 📖 `doc/iosevka_sizing.md` | Grid derivation, margin sweet spots, font metrics, column layout math |
+| 📖 `doc/ats_requirements.md` | ATS formatting rules and constraints |
+| 📖 `doc/ats_check.md` | ATS compliance checklist |
 
 ---
 

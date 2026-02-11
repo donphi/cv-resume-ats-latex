@@ -1004,9 +1004,8 @@
 % can compute page breaks deterministically. Each box template calls
 % \LogBoxHeight{filename}{contentRows} after measuring.
 %
-% The file is only written during the first pass. On subsequent passes
-% (when layout.py has already generated canvas.tex), the heights are
-% still logged but layout.py only reads them when invoked.
+% With latexmk -outdir=build, \openout writes relative to the output
+% directory, so boxheights.dat lands in build/boxheights.dat automatically.
 % ============================================================================
 \newwrite\boxheightfile
 \immediate\openout\boxheightfile=boxheights.dat\relax

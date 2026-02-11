@@ -7,14 +7,14 @@
 %   §4  \HSL, \HDL, \HDOT, \HC  (header color shortcuts)
 %   §7  \CountTextCols, \Repeat
 %
-% USAGE (in canvas.tex):
+% USAGE (in generated/canvas.tex):
 %   \CVHeader{X}{Y}
 %       {\StoredName}{\StoredTitle}
 %       {\StoredEmail}{\StoredPhone}
 %       {\StoredLinkedin}{\StoredLocation}
 %
 % STRUCTURAL CONSTANTS (derived from box-drawing pattern, not params):
-%   8 = border/dot/space char count in name row:  ┌(1) ·(1) space(1) NAME ▌(1) space(1) ·(1) ╖(1) = 7 fixed + 1 cursor
+%   6 = border/dot/space char count in name row:  ┌(1) ·(1) space(1) NAME ▌(1) ·(1) ╖(1) = 6 fixed
 %   6 = border/dot/space char count in title row: │(1) ·(1) space(1) >_(2) TITLE space(1) ·(1) ║(1) — but see titlePadLeft/Right
 %   2 = left + right border columns (│ and ║)
 %   4 = per-contact-item fixed chars: space(1) ITEM space(1) + dot-space overlap
@@ -66,10 +66,10 @@
     % STEP 3: CALCULATE DASH COUNTS
     % =========================================================================
     %
-    % NAME LINE: ╒(1) + dashes + ·(1) + space(1) + NAME + space(1) + ·(1) + dashes + ╕(1)
-    % Fixed = 7 chars, so dashes = HeaderWidth - 7 - nameLen
+    % NAME LINE: ┌(1) + dashes + ·(1) + space(1) + NAME + ▌(1) + ·(1) + dashes + ╖(1)
+    % Fixed = 6 chars, so dashes = HeaderWidth - 6 - nameLen
     %
-    \pgfmathtruncatemacro{\nameDashTotal}{\HeaderWidth - 7 - \nameLen}%
+    \pgfmathtruncatemacro{\nameDashTotal}{\HeaderWidth - 6 - \nameLen}%
     \pgfmathtruncatemacro{\nameDashLeft}{\nameDashTotal / 2}%
     \pgfmathtruncatemacro{\nameDashRight}{\nameDashTotal - \nameDashLeft}%
     %

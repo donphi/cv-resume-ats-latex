@@ -5,38 +5,38 @@
 # For the ATS CV, all items are joined with ", " into a single line.
 
 groups:
-  - category: "GPU / Compute"
+  - category: "Vocal / Audio"
     items:
-      - "NVIDIA B200, RTX 6000 Pro"
-      - "Multi-GPU Parallelism, Polars"
-      - "DuckDB, FAISS, vLLM"
+      - "Screaming, Rapping, Singing"
+      - "Pro Tools, Ableton Live, SSL Consoles"
+      - "Dynamic range: 0 dB (whisper) to 130 dB (Woodstock)"
 
-  - category: "ML & NLP"
+  - category: "Live Ops"
     items:
-      - "PyTorch, HF Transformers"
-      - "Sentence-Transformers, SapBERT"
-      - "SHAP, Lifelines, Scikit-learn"
+      - "Crowd orchestration (20K+ nodes)"
+      - "Stage-dive ingress/egress protocols"
+      - "Wall-of-death & circle-pit load balancing"
 
-  - category: "Pipelines"
+  - category: "Production"
     items:
-      - "Docker, Prefect, RabbitMQ"
-      - "Distributed worker patterns, CI/CD"
-      - "181 Container Workflows"
+      - "Multi-track recording, mixing, mastering"
+      - "Music video direction & post-production"
+      - "6 studio albums, 40M+ units shipped"
 
-  - category: "Multimodal"
+  - category: "Film & Media"
     items:
-      - "Docling, Surya, PaddleOCR"
-      - "High-throughput PDF-to-JSON"
-      - "Token-Spine Alignment"
+      - "Feature film direction (Tribeca)"
+      - "Cinematography, colour grading, DaVinci"
+      - "Casting, location scouting, crew management"
 
-  - category: "Healthcare"
+  - category: "Business"
     items:
-      - "UK Biobank, DNA Nexus"
-      - "MONDO, HPO, EFO Ontologies"
-      - "Biomarkers, Polygenic Scores"
+      - "Record label operations (Flip Records)"
+      - "A&R, talent scouting, contract negotiation"
+      - "$30M deal closure, $100M+ pipeline revenue"
 
-  - category: "Performance"
+  - category: "Headwear"
     items:
-      - "System profiling (sysstat/SAR)"
-      - "GPU utilisation management"
-      - "Resource contention, throughput"
+      - "Red cap (backwards, 100% uptime)"
+      - "Fitted, snapback, trucker variants"
+      - "All-weather deployment certified"

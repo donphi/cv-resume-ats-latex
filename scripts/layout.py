@@ -5,15 +5,15 @@ layout.py — Two-pass deterministic page-break engine for the designed CV.
 Modes:
     --measure   Generate generated/canvas.tex with all boxes placed
                 sequentially (no splits) so pass 1 can measure heights.
-    --layout    Read boxheights.dat (written by pass 1 via \\LogBoxHeight),
+    --layout    Read build/boxheights.dat (written by pass 1 via \\LogBoxHeight),
                 compute page breaks, and regenerate generated/canvas.tex
                 with proper splits and page breaks.
 
 Inputs (ALL required — no defaults, no assumptions):
     content/contact.yaml   — paper_size, margin
     content/layout.yaml    — section order and column assignments
-    preamble.tex           — grid/box master parameters (parsed via regex)
-    boxheights.dat         — measured content heights (only for --layout)
+    engine/preamble.tex    — grid/box master parameters (parsed via regex)
+    build/boxheights.dat   — measured content heights (only for --layout)
 
 Outputs:
     --measure:  generated/canvas.tex (passthrough, no splits)
@@ -48,11 +48,14 @@ except ImportError:
 ROOT = Path(__file__).resolve().parent.parent
 CONTENT_DIR = ROOT / "content"
 GENERATED_DIR = ROOT / "generated"
-PREAMBLE_PATH = ROOT / "preamble.tex"
+PREAMBLE_PATH = ROOT / "engine" / "preamble.tex"
 
 CONTACT_YAML = CONTENT_DIR / "contact.yaml"
 LAYOUT_YAML = CONTENT_DIR / "layout.yaml"
-BOXHEIGHTS_PATH = ROOT / "boxheights.dat"
+BUILD_DIR = ROOT / "build"
+# boxheights.dat is written to the project root by LuaLaTeX (openout_any=p
+# forbids subdirectory writes), then moved to build/ by the Dockerfile.
+BOXHEIGHTS_PATH = BUILD_DIR / "boxheights.dat"
 CANVAS_TEX_PATH = GENERATED_DIR / "canvas.tex"
 
 # Page dimensions — keyed by paper_size.

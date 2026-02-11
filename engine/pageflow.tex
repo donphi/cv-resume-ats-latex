@@ -19,9 +19,9 @@
 %   This file must be loaded AFTER the template files (header.tex,
 %   leftbox.tex, rightbox.tex) because it uses \CVHeader, \LeftPosY,
 %   and \RightPosY which those templates define.
-%   canvas.tex loads it in the correct order automatically.
+%   generated/canvas.tex loads it in the correct order automatically.
 %
-% USAGE (in canvas.tex):
+% USAGE (in generated/canvas.tex):
 %   \SetCVHeader{Name}{Title}{email}{phone}{linkedin}{location}
 %   ... place boxes on page 1 ...
 %   \CVPageBreak
@@ -35,7 +35,7 @@
 \newcommand{\MaxPageY}{\GridRows}
 
 % --- Store header arguments for repetition ----------------------------------
-%     Called once in canvas.tex. Stores all 6 header fields as global macros
+%     Called once in generated/canvas.tex. Stores all 6 header fields as global macros
 %     so \RepeatHeader can re-draw the header on subsequent pages.
 \newcommand{\SetCVHeader}[6]{%
     \gdef\StoredName{#1}%

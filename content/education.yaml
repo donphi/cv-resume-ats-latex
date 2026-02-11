@@ -7,41 +7,35 @@
 #           Omit if not applicable.
 
 entries:
-  - degree: "MSc AI and Digital Health"
-    institution: "University of Westminster"
-    dates: "2024 -- 2026"
-    location: "London, UK"
-    details: "First-class ~78% avg"
-    progress: 78
-
-  - degree: "Executive Assessment"
-    institution: "Wharton / Duke EMBA"
-    dates: "2023"
-    location: ""
-    details: "Score: 153 (IR 11, VR 10, QR 12)"
-
-  - degree: "Statistics & Calculus I"
-    institution: "Outliers.org Online"
-    dates: "2023 -- 2024"
-    location: "NYC, US"
-    details: "Statistics 95%"
+  - degree: "MFA in Crowd Dynamics & Mosh Pit Theory"
+    institution: "School of Hard Knocks"
+    dates: "1994 -- 1999"
+    location: "Jacksonville, FL"
+    details: "Graduated with Distinction in Applied Chaos"
     progress: 95
 
-  - degree: "The Credential of Readiness"
-    institution: "Harvard Business School Online"
-    dates: "2022"
-    location: ""
-    details: ""
-
-  - degree: "Corporate Finance"
-    institution: "NYU Stern (Aswath Damodaran)"
-    dates: "2020"
-    location: "NYC, US"
-    details: "Perfect 100%"
+  - degree: "Certified Red Cap Specialist"
+    institution: "New Era Institute of Headwear Sciences"
+    dates: "1997"
+    location: "Buffalo, NY"
+    details: "Backwards orientation, 100% consistency"
     progress: 100
 
-  - degree: "NQF 6: Product Design"
-    institution: "Cape Peninsula University of Technology"
-    dates: "2005 -- 2009"
-    location: "Cape Town, RSA"
-    details: "Design Indaba Fab Lab: Innovation in Lighting"
+  - degree: "Advanced Diploma in Lyrical Engineering"
+    institution: "Jacksonville Community College"
+    dates: "1991 -- 1993"
+    location: "Jacksonville, FL"
+    details: "Focus: Rhyme Scheme Optimisation & Flow Control"
+    progress: 82
+
+  - degree: "Tattoo Artistry & Dermal Rendering"
+    institution: "Villain's Apprenticeship Programme"
+    dates: "1989 -- 1990"
+    location: "Jacksonville, FL"
+    details: "500+ successful skin-based deployments"
+
+  - degree: "High School Diploma"
+    institution: "Andrew Jackson High School"
+    dates: "1984 -- 1988"
+    location: "Jacksonville, FL"
+    details: "Voted Most Likely to Keep Rollin'"

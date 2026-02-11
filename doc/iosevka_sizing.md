@@ -1,7 +1,7 @@
 # Iosevka Grid Sizing Calculation
 
 How the CV's character-cell grid is derived from the Iosevka font parameters
-and the master config in `preamble.tex`.
+and the master config in `engine/preamble.tex`.
 
 ---
 
@@ -12,8 +12,8 @@ and the master config in `preamble.tex`.
 | `fonts/iosevka/parameters/parameters.toml` | Master font metrics: UPM, leading, cap height, spacing mode |
 | `fonts/iosevka/parameters/shape-width.toml` | Width grades: maps variant names to advance-width values |
 | `fonts/iosevka/parameters/variants.toml` | Character shape variants (does not affect grid sizing) |
-| `preamble.tex` (§1–§2) | Page size, margins, grid engine |
-| `preamble.tex` (§6) | Box geometry: column widths, gaps, padding |
+| `engine/preamble.tex` (§1–§2) | Page size, margins, grid engine |
+| `engine/preamble.tex` (§6) | Box geometry: column widths, gaps, padding |
 
 ---
 
@@ -65,7 +65,7 @@ This means each character is **0.6 em wide** and **1.0 em tall**.
 
 ---
 
-## 4. Master Parameters (preamble.tex §1–§2)
+## 4. Master Parameters (engine/preamble.tex §1–§2)
 
 These are the only values a user needs to change to resize the entire layout:
 
@@ -238,7 +238,7 @@ PtToMM = 25.4 mm / 72 = 0.35277̄ mm per pt
 This is stored in `\PtToMM` (via `\fpeval{25.4 / 72}`) so no magic number
 appears in the cell-size formulas.
 
-### 5.3 Cell Size (Step 1 in preamble.tex)
+### 5.3 Cell Size (Step 1 in engine/preamble.tex)
 
 ```
 CellWidth  = GridFontSize * MonoWidthRatio * PtToMM
@@ -313,7 +313,7 @@ coordinates is the top-left corner of the drawable area.
 
 ---
 
-## 6. Layout Derivation (preamble.tex §6)
+## 6. Layout Derivation (engine/preamble.tex §6)
 
 Once the grid dimensions are known, the two-column layout is derived.
 The key invariant is:
@@ -396,7 +396,7 @@ The grid uses three different leading values depending on context:
 | Left body text | 1.2 * grid row | 1.2 | Readable prose, slightly tighter than font default |
 | Right body text | 1.2 * grid row | 1.2 | Same as left |
 
-The `\ContentLeading = 1.2` value in `preamble.tex` is slightly less than the
+The `\ContentLeading = 1.2` value in `engine/preamble.tex` is slightly less than the
 font's recommended 1.25. This was chosen to keep body text compact while
 remaining readable. Proportional text "floats" on its own baseline grid
 (every 1.2 rows) rather than snapping to integer grid rows.
@@ -438,7 +438,7 @@ Files in `fonts/iosevka/`:
 
 ## 10. Quick Reference: Changing Grid Density
 
-To adjust the grid, change `\GridFontSize` in `preamble.tex`. Everything else
+To adjust the grid, change `\GridFontSize` in `engine/preamble.tex`. Everything else
 recomputes automatically.
 
 | Font Size (pt) | Cell Width (mm) | Cell Height (mm) | Cols | Rows |

@@ -8,7 +8,7 @@
 %   §7  \LeftTypography, \Repeat
 %   §4  content-bg  (Tier 3 color for content background)
 %
-% SETUP (in canvas.tex):
+% SETUP (in engine/canvas.tex → generated/canvas.tex):
 %   \LeftBoxInit{0}{\ContentStartY}
 %
 % USAGE:
@@ -34,7 +34,7 @@
 \newcommand{\LeftPosX}{0}               % Current X position
 \newcommand{\LeftPosY}{0}               % Current Y position
 
-% Initialize position — CALL THIS FIRST in canvas.tex
+% Initialize position — CALL THIS FIRST in generated/canvas.tex
 \newcommand{\LeftBoxInit}[2]{%
     % #1 = X position (grid columns from left)
     % #2 = Y position (grid rows from top)

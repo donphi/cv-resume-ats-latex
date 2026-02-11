@@ -14,7 +14,7 @@
 %   for example, a standalone skills table, a full-width summary, or any
 %   content that benefits from the full page width.
 %
-% SETUP (in canvas.tex):
+% SETUP (in engine/canvas.tex → generated/canvas.tex):
 %   \FullBoxInit{0}{\ContentStartY}
 %
 % USAGE:
@@ -41,7 +41,7 @@
 \newcommand{\FullPosX}{0}               % Current X position
 \newcommand{\FullPosY}{0}               % Current Y position
 
-% Initialize position — CALL THIS FIRST in canvas.tex
+% Initialize position — CALL THIS FIRST in generated/canvas.tex
 \newcommand{\FullBoxInit}[2]{%
     % #1 = X position (grid columns from left, typically 0)
     % #2 = Y position (grid rows from top, typically \ContentStartY)

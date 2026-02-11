@@ -26,4 +26,33 @@
 #     venue: "EMNLP Findings"
 #     year: "2023"
 
-entries: []
+entries:
+  - authors: "Durst, F., Borland, W., Rivers, W., Otto, J., & Lethal, DJ"
+    title: "Significant Other"
+    venue: "Flip/Interscope Records (7x Platinum)"
+    year: "1999"
+
+  - authors: "Durst, F., Borland, W., Rivers, W., Otto, J., & Lethal, DJ"
+    title: "Chocolate Starfish and the Hot Dog Flavored Water"
+    venue: "Flip/Interscope Records (6x Platinum)"
+    year: "2000"
+
+  - authors: "Durst, F., Borland, W., Rivers, W., Otto, J., & Lethal, DJ"
+    title: "Three Dollar Bill, Yall$"
+    venue: "Flip/Interscope Records (3x Platinum)"
+    year: "1997"
+
+  - authors: "Durst, F. (Director)"
+    title: "The Education of Charlie Banks"
+    venue: "Tribeca Film Festival / Anchor Bay Entertainment"
+    year: "2007"
+
+  - authors: "Durst, F. (Director)"
+    title: "The Longshots"
+    venue: "Metro-Goldwyn-Mayer / Dimension Films"
+    year: "2008"
+
+  - authors: "Durst, F."
+    title: "Patent: Method for Backwards Cap Aerodynamic Optimisation During High-Velocity Stage Performance (US 6,969,420)"
+    venue: "United States Patent and Trademark Office"
+    year: "2002"

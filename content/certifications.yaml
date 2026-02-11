@@ -22,4 +22,27 @@
 #     issuer: "Project Management Institute"
 #     year: "2022"
 
-entries: []
+entries:
+  - name: "RIAA Diamond Certification --- Significant Other"
+    issuer: "Recording Industry Association of America"
+    year: "2001"
+
+  - name: "RIAA 6x Platinum --- Chocolate Starfish and the Hot Dog Flavored Water"
+    issuer: "Recording Industry Association of America"
+    year: "2001"
+
+  - name: "MTV VMA --- Best Rock Video (Rollin')"
+    issuer: "MTV Networks"
+    year: "2001"
+
+  - name: "Certified Mosh Pit Safety Coordinator"
+    issuer: "National Association of Concert Venue Operators"
+    year: "1999"
+
+  - name: "Backwards Red Cap Operator Licence (Level 5)"
+    issuer: "New Era Cap Company"
+    year: "1997"
+
+  - name: "Journeyman Tattoo Artist"
+    issuer: "Florida Department of Health"
+    year: "1991"

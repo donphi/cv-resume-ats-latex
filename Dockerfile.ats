@@ -2,6 +2,9 @@
 #  ATS CV builder (pdfLaTeX)
 #  Image : texlive/texlive (official, rebuilt weekly by Island of TeX)
 #  Docs  : https://hub.docker.com/r/texlive/texlive
+#
+#  All intermediate files go into build/. Only the final PDF is
+#  copied to the project root.
 # ──────────────────────────────────────────────────────────────────
 FROM texlive/texlive:latest
 
@@ -9,4 +12,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends python3-yaml &&
 
 WORKDIR /data
 
-CMD ["sh", "-c", "python3 scripts/generate.py && . generated/.build-meta && latexmk -pdf -interaction=nonstopmode -jobname=\"${OUTPUT_NAME}-${OUTPUT_TYPE}-ats\" main_ats.tex"]
+CMD ["sh", "-c", "\
+    python3 scripts/generate.py \
+    && mkdir -p build \
+    && . generated/.build-meta \
+    && latexmk -pdf -auxdir=build -outdir=build -interaction=nonstopmode -jobname=\"${OUTPUT_NAME}-${OUTPUT_TYPE}-ats\" main_ats.tex \
+    && cp build/\"${OUTPUT_NAME}-${OUTPUT_TYPE}-ats.pdf\" . \
+"]
