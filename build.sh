@@ -43,8 +43,9 @@ done
 if $CLEAN; then
   echo "Cleaning build artifacts..."
   rm -f *.aux *.log *.out *.fls *.fdb_latexmk *.synctex.gz *.pdf
-  rm -f ats_main.tex
-  rm -f generated/.build-meta generated/settings.tex
+  rm -f main_ats.tex boxheights.dat
+  rm -f generated/.build-meta generated/settings.tex generated/canvas.tex
+  rm -f generated/*-p[0-9]*.tex 2>/dev/null || true
   echo "Done."
   exit 0
 fi

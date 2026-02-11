@@ -205,12 +205,62 @@
 \newcommand{\etoile}{\sffamily}
 
 % --- Size commands (change these to resize all content globally) ------------
-%     These are LaTeX size commands: \tiny \scriptsize \footnotesize
-%     \small \normalsize \large etc.
-\newcommand{\ContentSizeLeft}{\footnotesize}    % left box body text
-\newcommand{\ContentSizeRight}{\footnotesize}   % right box body text (matches left for consistency)
-\newcommand{\HeadingSize}{\small\bfseries}      % subsection headings
-\newcommand{\SecondarySize}{\footnotesize}      % dates, orgs, locations
+%
+%     These commands ONLY control size — the font family (Iosevka Aile)
+%     is set separately by \aile inside the typography presets (§7.2).
+%     Changing a size command here does NOT change the font, just how
+%     big or small the text renders.
+%
+%     TO CHANGE SIZE: pick a value from the table below and paste
+%     the command between the braces { } on the right.
+%
+%     SIZE REFERENCE TABLE
+%     ────────────────────────────────────────────────────────────────
+%     pt    What to paste
+%     ────────────────────────────────────────────────────────────────
+%      5    \tiny
+%      5.5  \fontsize{5.5}{6.6}\selectfont
+%      6    \fontsize{6}{7.2}\selectfont
+%      6.5  \fontsize{6.5}{7.8}\selectfont
+%      7    \scriptsize
+%      7.5  \fontsize{7.5}{9}\selectfont
+%      8    \footnotesize                          ← body text default
+%      8.5  \fontsize{8.5}{10.2}\selectfont
+%      9    \small                                 ← heading default
+%      9.5  \fontsize{9.5}{11.4}\selectfont
+%     10    \normalsize
+%     10.5  \fontsize{10.5}{12.6}\selectfont
+%     11    \fontsize{11}{13.2}\selectfont
+%     11.5  \fontsize{11.5}{13.8}\selectfont
+%     12    \large
+%     14.4  \Large
+%     17.28 \LARGE
+%     20.74 \huge
+%     24.88 \Huge
+%     ────────────────────────────────────────────────────────────────
+%
+%     EXAMPLES — just changing size (font stays Iosevka Aile):
+%       \newcommand{\ContentSizeLeft}{\small}
+%                                      ^^^^^^ body text becomes 9 pt
+%
+%       \newcommand{\ContentSizeLeft}{\fontsize{8.5}{10.2}\selectfont}
+%                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+%                                      body text becomes 8.5 pt
+%                                      (yes, \selectfont is literal —
+%                                       you must include it for the
+%                                       \fontsize command to work)
+%
+%     The {10.2} is the line spacing (1.2× the size). It is overridden
+%     by \ContentLeading in this CV, so the exact value doesn't matter
+%     — just keep it at roughly 1.2× the font size.
+%
+%     TO CHANGE FONT FAMILY (advanced): edit the \aile / \etoile /
+%     \mono shortcuts above, or change the \setmainfont block.
+%
+\newcommand{\ContentSizeLeft}{\footnotesize}    % left box body text       (8 pt)
+\newcommand{\ContentSizeRight}{\footnotesize}   % right box body text      (8 pt)
+\newcommand{\HeadingSize}{\small\bfseries}      % subsection headings      (9 pt bold)
+\newcommand{\SecondarySize}{\footnotesize}      % dates, orgs, locations   (8 pt)
 
 
 % ============================================================================
@@ -948,7 +998,29 @@
 
 
 % ============================================================================
-% §8  DEBUG
+% §8  BOX HEIGHT LOGGING (for layout.py auto page-break engine)
+% ============================================================================
+% Writes measured content heights to boxheights.dat so scripts/layout.py
+% can compute page breaks deterministically. Each box template calls
+% \LogBoxHeight{filename}{contentRows} after measuring.
+%
+% The file is only written during the first pass. On subsequent passes
+% (when layout.py has already generated canvas.tex), the heights are
+% still logged but layout.py only reads them when invoked.
+% ============================================================================
+\newwrite\boxheightfile
+\immediate\openout\boxheightfile=boxheights.dat\relax
+
+\newcommand{\LogBoxHeight}[2]{%
+    % #1 = content file path (e.g. generated/summary.tex)
+    % #2 = contentRows (integer)
+    \immediate\write\boxheightfile{#1=#2}%
+}
+
+\AtEndDocument{\immediate\closeout\boxheightfile}
+
+% ============================================================================
+% §9  DEBUG
 % ============================================================================
 
 \newcommand{\ShowGridInfo}{%

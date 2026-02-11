@@ -2,7 +2,7 @@
 
 One set of YAML files. Two PDFs. Zero LaTeX knowledge required.
 
-A **designed CV** with monospaced box-drawing typography and an **ATS-friendly resume** built for applicant tracking systems — both generated from the same content, both compiled inside Docker. Supports A4 (UK/EU curriculum vitae) and US Letter (American resume).
+A **designed CV / Resume** with monospaced box-drawing typography and an **ATS-friendly CV / Resume** built for applicant tracking systems — both generated from the same content, both compiled inside Docker. Supports A4 (UK/EU curriculum vitae) and US Letter (American resume).
 
 **Only requirement: [Docker](https://www.docker.com/) and Docker Compose.**
 
@@ -123,14 +123,15 @@ The designed version uses a **character-cell grid** — every element is placed 
 
 ```
 content/          <-- YOUR DATA. The only place you edit.
+  layout.yaml     <-- Section order and column assignments (left/right/full).
 generated/        <-- Auto-built LaTeX files. Do not hand-edit.
 engine/           <-- Layout templates (header, boxes, pageflow). Advanced only.
 fonts/            <-- Iosevka typefaces (auto-downloaded on first build) + build parameters.
-scripts/          <-- Python generator + font downloader.
+scripts/          <-- Python generator, layout engine, font downloader.
 doc/              <-- Deep-dive docs (grid sizing, ATS requirements, images).
 preamble.tex      <-- Styling hyperparameters (fonts, colours, spacing, grid). Advanced only.
-canvas.tex        <-- Page assembly (which boxes go where). Advanced only.
-cv.tex            <-- Entry point for LuaLaTeX. Do not edit.
+canvas.tex        <-- Auto-generated redirect. Do not hand-edit (see layout.yaml).
+main.tex          <-- Entry point for LuaLaTeX. Do not edit.
 ```
 
 ---
@@ -138,6 +139,8 @@ cv.tex            <-- Entry point for LuaLaTeX. Do not edit.
 ## Editing Your Content (Basic)
 
 All content lives in `content/*.yaml`. Each file has inline comments explaining the format. Special characters (`&`, `$`, `%`, `#`, `_`, `~`) are auto-escaped — just type plain text.
+
+Section placement is controlled by `content/layout.yaml` — see [Section Order and Columns](#section-order-and-columns--contentlayoutyaml) below.
 
 ### contact.yaml — your details, paper size, and margin
 
@@ -290,23 +293,52 @@ The colour system has 3 tiers:
 % RightBoxWidth is auto-derived: GridCols - LeftBoxWidth - ColumnGap
 ```
 
-### Box Types — canvas.tex
+### Section Order and Columns — content/layout.yaml
 
-Three box types for placing content on the page:
+> **This is the file you edit to control which sections appear, in what order, and in which column.** Do not edit `canvas.tex` — it is auto-generated on every build and your changes will be overwritten.
 
-- `\LeftBox{TITLE}{generated/file.tex}` — left column box
-- `\RightBox{TITLE}{generated/file.tex}` — right column box
-- `\FullBox{TITLE}{generated/file.tex}` — full-width box
+```yaml
+sections:
+  - title: "SUMMARY"
+    content: "summary.tex"
+    column: "left"
 
-All boxes auto-measure their content height. Stack them with `\LeftBoxGap{\GapBoxToBox}` between.
+  - title: "RESEARCH EXPERIENCE"
+    content: "research_experience.tex"
+    column: "left"
 
-### Page Breaks — canvas.tex
+  - title: "WORK EXPERIENCE"
+    content: "work_experience.tex"
+    column: "left"
 
-```latex
-\CVPageBreak          % start a new page (header repeats automatically)
-\LeftBoxInit{0}{\ContentStartY}
-\RightBoxInit{\RightColX}{\ContentStartY}
+  - title: "TECHNICAL SKILLS"
+    content: "skills.tex"
+    column: "right"
+
+  - title: "EDUCATION"
+    content: "education.tex"
+    column: "right"
 ```
+
+| Field | Description |
+|-------|-------------|
+| `title` | The heading shown in the box border (e.g. `"SUMMARY"`) |
+| `content` | The generated `.tex` filename (relative to `generated/`) |
+| `column` | `"left"`, `"right"`, or `"full"` |
+
+Sections within the same column are placed top-to-bottom in the order listed. Add, remove, or reorder entries here and rebuild — the layout engine handles page breaks automatically.
+
+### Automatic Page Breaks
+
+Page breaks are computed automatically. The build pipeline runs a **two-pass compile**:
+
+1. **Pass 1** — LuaLaTeX measures the exact height of every content box.
+2. **Layout engine** (`scripts/layout.py`) reads those heights, computes where page breaks fall, and splits any overflowing section at a clean boundary (between job entries, skill categories, education items, or research subsections).
+3. **Pass 2** — LuaLaTeX compiles the final PDF with the computed layout.
+
+You never need to manually insert page breaks or split content files. If your content grows or shrinks, just rebuild and the layout adjusts.
+
+> **`canvas.tex` is off limits.** It is a one-line redirect to `generated/canvas.tex`, which is regenerated on every build. Any manual edits will be silently overwritten.
 
 ### Font Sizing — preamble.tex section 2
 
@@ -341,32 +373,40 @@ Custom build parameters are stored in `fonts/iosevka/parameters/` for reference 
 
 ```
 content/*.yaml                    You edit these
+content/layout.yaml               Section order + column assignments
        │
        ▼
-scripts/generate.py               Runs inside Docker
+scripts/generate.py               YAML → generated/*.tex (content)
        │
        ├──▶ generated/*.tex       Designed CV components
        ├──▶ generated/settings.tex   Paper size + margin
        ├──▶ generated/.build-meta    Dynamic output filenames
-       └──▶ ats_main.tex          ATS CV (self-contained)
+       └──▶ main_ats.tex          ATS CV (self-contained)
        │
        ▼
-canvas.tex + preamble.tex         Layout engine
-+ engine/*.tex
+scripts/layout.py --measure       Generate passthrough canvas
        │
        ▼
-LuaLaTeX (designed)               Docker container
-pdfLaTeX (ATS)                    Docker container
+LuaLaTeX (pass 1)                 Measure box heights → boxheights.dat
+       │
+       ▼
+scripts/layout.py --layout        Compute page breaks, split content
+       │
+       ├──▶ generated/canvas.tex     Layout with page breaks
+       └──▶ generated/*-p1.tex, ...  Split content (if needed)
+       │
+       ▼
+LuaLaTeX (pass 2)                 Final PDF
        │
        ▼
 fred-durst-cv.pdf                 Designed CV
-fred-durst-cv-ats.pdf             ATS-optimised CV
+fred-durst-cv-ats.pdf             ATS-optimised CV (separate pipeline)
 ```
 
 The generator reads plain YAML, escapes special characters for LaTeX, and writes two outputs:
 
-1. **Designed CV**: individual `generated/*.tex` files using custom environments (`treelist`, `timeline`, `skilllist`), consumed by `canvas.tex` which places them in boxes on a character-cell grid.
-2. **ATS CV**: a single `ats_main.tex` file with plain `\section` / `\itemize` formatting, optimised for applicant tracking system parsers. Acronyms are expanded on first use.
+1. **Designed CV**: individual `generated/*.tex` files using custom environments (`treelist`, `timeline`, `skilllist`). The layout engine (`scripts/layout.py`) measures each section's height, computes page breaks, and generates `generated/canvas.tex` which places them in boxes on a character-cell grid with automatic page breaks.
+2. **ATS CV**: a single `main_ats.tex` file with plain `\section` / `\itemize` formatting, optimised for applicant tracking system parsers. Acronyms are expanded on first use.
 
 Both outputs are compiled inside Docker containers. No local dependencies beyond Docker.
 

@@ -9,4 +9,4 @@ RUN apt-get update && apt-get install -y --no-install-recommends python3-yaml &&
 
 WORKDIR /data
 
-CMD ["sh", "-c", "python3 scripts/generate.py && . generated/.build-meta && latexmk -pdf -interaction=nonstopmode -jobname=\"${OUTPUT_NAME}-${OUTPUT_TYPE}-ats\" ats_main.tex"]
+CMD ["sh", "-c", "python3 scripts/generate.py && . generated/.build-meta && latexmk -pdf -interaction=nonstopmode -jobname=\"${OUTPUT_NAME}-${OUTPUT_TYPE}-ats\" main_ats.tex"]

@@ -1,0 +1,39 @@
+# ──────────────────────────────────────────────────────────────────
+# LAYOUT — section order and column assignments for the designed CV
+# ──────────────────────────────────────────────────────────────────
+#
+# This file declares which sections appear in which column and in
+# what order. The layout engine (scripts/layout.py) reads this to
+# generate canvas.tex with automatic page breaks.
+#
+# Fields:
+#   title   : Box title (appears in the top border, e.g. "SUMMARY")
+#   content : Generated .tex filename (relative to generated/)
+#   column  : "left", "right", or "full"
+#
+# Sections within the same column are placed top-to-bottom in the
+# order listed here. A gap of \GapBoxToBox rows is inserted between
+# consecutive boxes in the same column.
+#
+# ──────────────────────────────────────────────────────────────────
+
+sections:
+  - title: "SUMMARY"
+    content: "summary.tex"
+    column: "left"
+
+  - title: "RESEARCH EXPERIENCE"
+    content: "research_experience.tex"
+    column: "left"
+
+  - title: "WORK EXPERIENCE"
+    content: "work_experience.tex"
+    column: "left"
+
+  - title: "TECHNICAL SKILLS"
+    content: "skills.tex"
+    column: "right"
+
+  - title: "EDUCATION"
+    content: "education.tex"
+    column: "right"

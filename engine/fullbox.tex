@@ -85,6 +85,7 @@
     %
     % Debug output (visible in .log file)
     \typeout{FULLBOX [\detokenize{#1}]: rawPt=\rawHeightPt, contentRows=\contentRows, boxRows=\boxRows}%
+    \LogBoxHeight{#2}{\contentRows}%
     %
     % =========================================================================
     % STEP 2: DRAW BOX FRAME
