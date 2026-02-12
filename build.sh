@@ -45,7 +45,7 @@ if $CLEAN; then
   rm -rf build/
   rm -f *.pdf boxheights.dat
   rm -f main_ats.tex
-  rm -f generated/.build-meta generated/settings.tex generated/canvas.tex
+  rm -f generated/.build-meta generated/settings.tex generated/canvas.tex generated/header_name.tex
   rm -f generated/*-p[0-9]*.tex 2>/dev/null || true
   echo "Done."
   exit 0

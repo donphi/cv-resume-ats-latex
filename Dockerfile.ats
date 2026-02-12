@@ -15,6 +15,7 @@ WORKDIR /data
 CMD ["sh", "-c", "\
     python3 scripts/generate.py \
     && mkdir -p build \
+    && rm -f build/*.aux build/*.fls build/*.fdb_latexmk build/*.log build/*.out \
     && . generated/.build-meta \
     && latexmk -pdf -auxdir=build -outdir=build -interaction=nonstopmode -jobname=\"${OUTPUT_NAME}-${OUTPUT_TYPE}-ats\" main_ats.tex \
     && cp build/\"${OUTPUT_NAME}-${OUTPUT_TYPE}-ats.pdf\" . \

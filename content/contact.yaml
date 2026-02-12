@@ -55,7 +55,7 @@
 #   ├─────────┼────────────┼──────────────┼───────────────────────┤
 #   │    4.0  │ 106 × 91   │  4.04 mm     │ 93.5%                 │
 #   │    8.7  │ 101 × 88   │  8.80 mm     │ 86.2%                 │
-#   │ >> 13.5 │  96 × 85   │ 13.56 mm     │ 79.1%  ← default      │
+#   │ >>13.5  │  96 × 85   │ 13.56 mm     │ 79.1%  ← default      │
 #   │   18.3  │  91 × 82   │ 18.32 mm     │ 72.4%                 │
 #   │   23.0  │  86 × 79   │ 23.09 mm     │ 65.9%                 │
 #   │   27.8  │  81 × 76   │ 27.85 mm     │ 59.7%                 │
@@ -68,7 +68,7 @@
 #   ├─────────┼────────────┼──────────────┼───────────────────────┤
 #   │    3.1  │ 110 × 86   │ 0.12 in      │ 94.9%                 │
 #   │    7.9  │ 105 × 83   │ 0.31 in      │ 87.4%                 │
-#   │ >> 12.6 │ 100 × 80   │ 0.50 in      │ 80.2%  ← default      │
+#   │ >>12.6  │ 100 × 80   │ 0.50 in      │ 80.2%  ← default      │
 #   │   17.4  │  95 × 77   │ 0.69 in      │ 73.3%                 │
 #   │   22.2  │  90 × 74   │ 0.88 in      │ 66.8%                 │
 #   │   26.9  │  85 × 71   │ 1.06 in      │ 60.5%                 │
@@ -76,12 +76,49 @@
 #
 #   See doc/iosevka_sizing.md for the full derivation.
 #
+#   Header contact line budget
+#   ─────────────────────────
+#   The header contact row (email · phone · linkedin · location) must
+#   fit inside the grid width. The dot separators between items and
+#   the outer dot padding auto-shrink to fit, but the TEXT itself
+#   (plus 2 spaces around each item and 2 border chars) is fixed.
+#
+#   Budget = grid_cols − 2 (borders) − 8 (spaces) − total_text_chars
+#
+#   If the budget goes negative the line physically cannot fit and
+#   the build will emit a warning. In that case: shorten a field
+#   or use a wider margin (lower margin value → more columns).
+#
+#   ┌─────────────────────────────────────────────────────────────┐
+#   │  CONTACT CHAR BUDGET — A4 sweet spots                       │
+#   ├─────────┬──────┬────────────────────────────────────────────┤
+#   │ margin  │ cols │ max total contact chars (email+phone+…)    │
+#   ├─────────┼──────┼────────────────────────────────────────────┤
+#   │    4.0  │ 106  │  96                                        │
+#   │ >> 8.7  │ 101  │  91  ← default                             │
+#   │   13.5  │  96  │  86                                        │
+#   │   18.3  │  91  │  81                                        │
+#   │   23.0  │  86  │  76                                        │
+#   │   27.8  │  81  │  71                                        │
+#   └─────────┴──────┴────────────────────────────────────────────┘
+#
+#   The "max total contact chars" is the sum of all four field
+#   lengths. Staying under this limit guarantees at least 1-dot
+#   separators between items. Going a few chars over is fine —
+#   the separators just shrink to zero and items sit edge-to-edge.
+#
 # linkedin / github: omit the https:// prefix
 # full_cv_url: stable URL to the designed PDF (shown on ATS version)
+#
+# header_theme : Header style for the designed CV.
+#                "classic"   — plain text, box-drawing borders, >_ prompt
+#                "crt"       — bitmap block font █▀▄ with ░ phosphor trails
+#                "mainframe" — double-line box letters ╔═╗ with ░ shadow
 # ──────────────────────────────────────────────────────────────────
 
 paper_size: "a4"
-margin: 13.5
+margin: 7.8
+header_theme: "classic"
 name: "Fred Durst"
 title: "Senior Nookie Engineer"
 email: "fred.durst@limpbizkit.com"

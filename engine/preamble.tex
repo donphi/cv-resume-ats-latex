@@ -59,7 +59,7 @@
 \usepackage{pgfmath}              % math engine
 \usepackage{pgffor}               % \foreach loops
 \usepackage{xstring}              % string length measurement
-\usepackage{tikz}                 % drawing (used sparingly)
+\usepackage{tikz}                 % drawing
 \usepackage{geometry}             % page geometry (configured in §2)
 
 
@@ -257,10 +257,10 @@
 %     TO CHANGE FONT FAMILY (advanced): edit the \aile / \etoile /
 %     \mono shortcuts above, or change the \setmainfont block.
 %
-\newcommand{\ContentSizeLeft}{\footnotesize}    % left box body text       (8 pt)
-\newcommand{\ContentSizeRight}{\footnotesize}   % right box body text      (8 pt)
-\newcommand{\HeadingSize}{\small\bfseries}      % subsection headings      (9 pt bold)
-\newcommand{\SecondarySize}{\footnotesize}      % dates, orgs, locations   (8 pt)
+\newcommand{\ContentSizeLeft}{\fontsize{7.5}{9}\selectfont}     % left box body text       (8 pt)
+\newcommand{\ContentSizeRight}{\fontsize{7.5}{9}\selectfont}    % right box body text      (8 pt)
+\newcommand{\HeadingSize}{\footnotesize\bfseries}               % subsection headings      (9 pt bold)
+\newcommand{\SecondarySize}{\fontsize{7.5}{9}\selectfont}       % dates, orgs, locations   (8 pt)
 
 
 % ============================================================================
@@ -303,24 +303,24 @@
 % ----------------------------------------------------------------------------
 
 % --- THEME: Warm Orange (active) -------------------------------------------
-% \definecolor{pal-bg}{HTML}{FEFDFA}
-% \definecolor{pal-text}{HTML}{333333}
-% \definecolor{pal-structure}{HTML}{B8A090}
-% \definecolor{pal-depth}{HTML}{9C877A}
-% \definecolor{pal-accent}{HTML}{CC5500}
-% \definecolor{pal-dot}{HTML}{DDD8D0}
-% \definecolor{pal-heading}{HTML}{333333}
-% \definecolor{pal-subtle}{HTML}{7A7A7A}
+\definecolor{pal-bg}{HTML}{FEFDFA}
+\definecolor{pal-text}{HTML}{333333}
+\definecolor{pal-structure}{HTML}{B8A090}
+\definecolor{pal-depth}{HTML}{9C877A}
+\definecolor{pal-accent}{HTML}{CC5500}
+\definecolor{pal-dot}{HTML}{DDD8D0}
+\definecolor{pal-heading}{HTML}{333333}
+\definecolor{pal-subtle}{HTML}{7A7A7A}
 
-% --- THEME: Cool Blue -------------------------------------------------------
-\definecolor{pal-bg}{HTML}{F8FAFC}
-\definecolor{pal-text}{HTML}{2D3748}
-\definecolor{pal-structure}{HTML}{94A3B8}
-\definecolor{pal-depth}{HTML}{64748B}
-\definecolor{pal-accent}{HTML}{2563EB}
-\definecolor{pal-dot}{HTML}{CBD5E1}
-\definecolor{pal-heading}{HTML}{1E293B}
-\definecolor{pal-subtle}{HTML}{64748B}
+% % --- THEME: Cool Blue -------------------------------------------------------
+% \definecolor{pal-bg}{HTML}{F8FAFC}
+% \definecolor{pal-text}{HTML}{2D3748}
+% \definecolor{pal-structure}{HTML}{94A3B8}
+% \definecolor{pal-depth}{HTML}{64748B}
+% \definecolor{pal-accent}{HTML}{2563EB}
+% \definecolor{pal-dot}{HTML}{CBD5E1}
+% \definecolor{pal-heading}{HTML}{1E293B}
+% \definecolor{pal-subtle}{HTML}{64748B}
 
 % --- THEME: Monochrome ------------------------------------------------------
 % \definecolor{pal-bg}{HTML}{FAFAFA}
@@ -341,6 +341,28 @@
 % \definecolor{pal-dot}{HTML}{D4DDD0}
 % \definecolor{pal-heading}{HTML}{2D3A2D}
 % \definecolor{pal-subtle}{HTML}{5A6B5A}
+
+% --- THEME: Retrowave Red (dark CRT) ----------------------------------------
+%     Dark background with red phosphor accents. 1983 WarGames terminal.
+% \definecolor{pal-bg}{HTML}{0C0C0C}
+% \definecolor{pal-text}{HTML}{D4D4D4}
+% \definecolor{pal-structure}{HTML}{662222}
+% \definecolor{pal-depth}{HTML}{AA2020}
+% \definecolor{pal-accent}{HTML}{EE3333}
+% \definecolor{pal-dot}{HTML}{1A0808}
+% \definecolor{pal-heading}{HTML}{FF4444}
+% \definecolor{pal-subtle}{HTML}{888888}
+
+% --- THEME: Crimson ----------------------------------------------------------
+%     Light cream background with warm red structural lines and accents.
+% \definecolor{pal-bg}{HTML}{FFFAF8}
+% \definecolor{pal-text}{HTML}{2D2020}
+% \definecolor{pal-structure}{HTML}{C09090}
+% \definecolor{pal-depth}{HTML}{993333}
+% \definecolor{pal-accent}{HTML}{CC2200}
+% \definecolor{pal-dot}{HTML}{E0D0D0}
+% \definecolor{pal-heading}{HTML}{2D2020}
+% \definecolor{pal-subtle}{HTML}{7A5A5A}
 
 % ----------------------------------------------------------------------------
 % TIER 2: ROLES
@@ -388,6 +410,7 @@
 \colorlet{header-contact}{role-text}         % email, phone, linkedin, location
 \colorlet{header-cursor}{role-accent}        % ▌ cursor block after name
 \colorlet{header-prompt}{role-accent}        % >_ before title
+\colorlet{header-shade}{role-accent}         % ASCII-art name glyphs (mainframe/crt themes)
 
 % --- Left column boxes (Summary, Experience, etc.) -------------------------
 \colorlet{left-single}{role-box-light}       % ┌ ─ │  (top, left edges)
@@ -438,6 +461,7 @@
 \newcommand{\HDL}{\color{header-double}}   % ╖ ║ ╘ ═ ╝  (right, bottom edges)
 \newcommand{\HDOT}{\color{header-dot}}     % · fill inside header
 \newcommand{\HC}{\color{header-cursor}}    % ▌ cursor block, >_ prompt
+\newcommand{\HSHADE}{\color{header-shade}} % ASCII-art name glyphs (mainframe/crt)
 
 % --- Left box drawing -------------------------------------------------------
 \newcommand{\LSL}{\color{left-single}}     % ┌ ─ │
@@ -509,7 +533,8 @@
 %
 % MASTER PARAMETERS (change these to reshape the layout):
 %   \HeaderHeight ......... Rows the header occupies
-%   \HeaderContactSep ..... Dot-space gaps between contact items in header
+%   \HeaderContactSep ..... Preferred max dot-spaces between contact items
+%                           (auto-reduced by header.tex if content is too wide)
 %   \LeftBoxWidth ......... Width of the left column in grid cols
 %   \ColumnGap ............ Gap between left and right columns in grid cols
 %   \Left/Right/FullBoxPad* Padding inside boxes (cols or rows)
@@ -524,8 +549,27 @@
 % ============================================================================
 
 % --- Header (master) -------------------------------------------------------
-\newcommand{\HeaderHeight}{6}               % rows the header occupies
-\newcommand{\HeaderContactSep}{3}           % dot-spaces between contact items
+%   Block/shade chars in Iosevka Extended are 11.25pt tall (1.25× the 9pt
+%   grid cell).  The CRT and mainframe headers let those rows use their
+%   natural height via \FullHRow, so the header occupies more grid rows
+%   than the classic theme.
+%
+%     classic    : 6 rows × 9pt                      = 54pt   → 6 grid rows
+%     crt        : 4 × 11.25pt + 2 × 9pt             = 63pt   → 7 grid rows
+%     mainframe  : 5 × 11.25pt + 1 × 9pt             = 65.25pt → 7 grid rows
+%
+\def\tmpThemeClassic{classic}
+\def\tmpThemeCrt{crt}
+\def\tmpThemeMainframe{mainframe}
+\ifx\HeaderTheme\tmpThemeMainframe
+    \newcommand{\HeaderHeight}{7}
+\else\ifx\HeaderTheme\tmpThemeCrt
+    \newcommand{\HeaderHeight}{7}
+\else
+    \newcommand{\HeaderHeight}{6}
+\fi\fi
+\newcommand{\HeaderContactSep}{3}           % preferred max dot-spaces between contact items
+                                             % (header.tex auto-reduces to fit; set higher for wider margins)
 
 % --- Column layout (master) ------------------------------------------------
 \newcommand{\LeftBoxWidth}{63}              % left column width in grid cols
@@ -548,6 +592,20 @@
 \newcommand{\FullBoxPadRight}{3}            % right padding (cols)
 \newcommand{\FullBoxPadTop}{1.2}              % top padding (rows inside box)
 \newcommand{\FullBoxPadBot}{1}              % bottom padding (rows inside box)
+
+% --- Page-break split threshold (master) -----------------------------------
+%     When a box overflows the page, the layout engine tries to split it.
+%     \MinSplitContentRows is the minimum number of content rows that must
+%     fit on the CURRENT page for a split to happen. If fewer rows fit,
+%     the entire box is pushed to the next page instead.
+%
+%     Lower value  → more aggressive splitting (even a small stub stays
+%                    on page 1, rest continues on page 2).
+%     Higher value → less aggressive (box moves to page 2 whole unless
+%                    a meaningful chunk fits on page 1).
+%
+%     Sensible range: 1–10.  Default: 3.
+\newcommand{\MinSplitContentRows}{3}
 
 % --- Derived layout values (do not edit) ------------------------------------
 %     Invariant: LeftBoxWidth + ColumnGap + RightBoxWidth = GridCols
@@ -597,6 +655,31 @@
 % \CountTextCols{text} — count characters (for monospace centering math)
 \newcommand{\CountTextCols}[1]{%
     \StrLen{#1}[\measuredColsInt]%
+}
+
+% \FullHRow{content} — stack a header row at its NATURAL glyph height.
+%   NO CLIPPING.
+%
+%   MEASURED FACTS (Iosevka Extended at \GridFontSize = 9pt):
+%     All characters: wd = 5.4pt (grid-perfect)
+%     Block / shade / vert-spanning chars (█░▓║│▀▄):
+%       ht = 8.685pt, dp = 2.565pt, total = 11.25pt
+%     Grid cell (\TPVertModule) = 9pt
+%     Font leading = 1250/1000 = 1.25  →  9pt × 1.25 = 11.25pt
+%
+%   Block/shade chars are designed to span the full line height (1.25×em),
+%   NOT just the em-square.  Instead of clipping them to fit a 9pt cell
+%   (which cuts off ink or creates gaps), we let each row be its natural
+%   height.  We RAISE the content by its depth so all ink sits above the
+%   baseline (dp→0, ht→ht+dp).  Rows stack flush via \offinterlineskip
+%   and the shade/block patterns tile seamlessly with zero gaps.
+\newsavebox{\hrowbox}
+\newcommand{\FullHRow}[1]{%
+    \sbox{\hrowbox}{#1}%
+    \dimen0=\dp\hrowbox\relax
+    \setbox\hrowbox=\hbox{\raise\dimen0\box\hrowbox}%
+    \dp\hrowbox=0pt\relax
+    \box\hrowbox\relax
 }
 
 % ----------------------------------------------------------------------------

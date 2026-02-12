@@ -86,20 +86,33 @@
     \typeout{HEADER DEBUG: TITLE dashes total=\titleDashTotal, left=\titleDashLeft, right=\titleDashRight}%
     \typeout{HEADER DEBUG: TITLE check: 1+\titleDashLeft+1+1+\titleLen+1+1+\titleDashRight+1 = \the\numexpr1+\titleDashLeft+1+1+\titleLen+1+1+\titleDashRight+1\relax}%
     %
-    % CONTACT LINE: │(1) + dots + · email · + sep + · phone · + sep + · linkedin · + sep + · location · + dots + ║(1)
+    % CONTACT LINE: │(1) + outerL + · email · + sep + · phone · + sep + · linkedin · + sep + · location · + outerR + ║(1)
     % Each item block: space(1) + ITEM + space(1) = 2 + itemLen
     %
-    \pgfmathtruncatemacro{\contactContent}{%
-        (2 + \emailLen) + \HeaderContactSep + %
-        (2 + \phoneLen) + \HeaderContactSep + %
-        (2 + \linkedinLen) + \HeaderContactSep + %
-        (2 + \locationLen)%
-    }%
-    \pgfmathtruncatemacro{\contactDashTotal}{\HeaderWidth - 2 - \contactContent}%
-    \pgfmathtruncatemacro{\contactDashLeft}{\contactDashTotal / 2}%
-    \pgfmathtruncatemacro{\contactDashRight}{\contactDashTotal - \contactDashLeft}%
+    % The separator between items and the outer dot-padding are AUTO-COMPUTED
+    % so the line never overflows. \HeaderContactSep (preamble §6) is the
+    % preferred maximum — the actual value is clamped to what fits.
     %
-    \typeout{HEADER DEBUG: CONTACT content=\contactContent, dashes total=\contactDashTotal, left=\contactDashLeft, right=\contactDashRight}%
+    % 1. Text-only width (items + surrounding spaces, no separators)
+    \pgfmathtruncatemacro{\contactTextOnly}{%
+        (2 + \emailLen) + (2 + \phoneLen) + (2 + \linkedinLen) + (2 + \locationLen)%
+    }%
+    % 2. Available columns for dot zones (3 inner seps + 2 outer pads)
+    \pgfmathtruncatemacro{\contactAvail}{\HeaderWidth - 2 - \contactTextOnly}%
+    % 3. Inner sep = min(preferred, floor(available / 5))  — never negative
+    \pgfmathtruncatemacro{\contactSep}{max(0, min(\HeaderContactSep, \contactAvail / 5))}%
+    % 4. Outer dots = whatever remains after the 3 inner seps
+    \pgfmathtruncatemacro{\contactOuter}{max(0, \contactAvail - 3 * \contactSep)}%
+    \pgfmathtruncatemacro{\contactDashLeft}{\contactOuter / 2}%
+    \pgfmathtruncatemacro{\contactDashRight}{\contactOuter - \contactDashLeft}%
+    %
+    \typeout{HEADER DEBUG: CONTACT textOnly=\contactTextOnly, avail=\contactAvail, sep=\contactSep\space(preferred \HeaderContactSep), outerL=\contactDashLeft, outerR=\contactDashRight}%
+    %
+    % 5. Warn if contact text cannot fit even with zero separators
+    \ifnum\contactAvail<0\relax
+        \PackageWarning{header}{Contact line overflows by \the\numexpr-\contactAvail\relax\space chars!^^J%
+            Shorten contact details or use a wider margin (lower margin value in contact.yaml).}%
+    \fi
     %
     \pgfmathtruncatemacro{\innerW}{\HeaderWidth - 2}%
     \typeout{HEADER DEBUG: innerW = \innerW}%
@@ -134,12 +147,12 @@
         % ROW 3: Dot-filled empty
         \vbox to \TPVertModule{\vss\hbox{{\HSL│}{\HDOT\Repeat{\innerW}{·}}{\HDL║}}\vss}%
         %
-        % ROW 4: Contact info (dot-filled)
+        % ROW 4: Contact info (dot-filled, auto-spaced)
         \vbox to \TPVertModule{\vss\hbox{%
             {\HSL│}{\HDOT\Repeat{\contactDashLeft}{·}}%
-            { }#5{ }{\HDOT\Repeat{\HeaderContactSep}{·}}%
-            { }#6{ }{\HDOT\Repeat{\HeaderContactSep}{·}}%
-            { }#7{ }{\HDOT\Repeat{\HeaderContactSep}{·}}%
+            { }#5{ }{\HDOT\Repeat{\contactSep}{·}}%
+            { }#6{ }{\HDOT\Repeat{\contactSep}{·}}%
+            { }#7{ }{\HDOT\Repeat{\contactSep}{·}}%
             { }#8{ }%
             {\HDOT\Repeat{\contactDashRight}{·}}{\HDL║}%
         }\vss}%

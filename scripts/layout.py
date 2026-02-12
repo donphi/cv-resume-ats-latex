@@ -32,203 +32,24 @@ import re
 import sys
 from pathlib import Path
 
-try:
-    import yaml
-except ImportError:
-    print(
-        "ERROR: PyYAML is required.  Install it with:\n"
-        "  pip install pyyaml",
-        file=sys.stderr,
-    )
-    sys.exit(1)
-
 # ---------------------------------------------------------------------------
-# Paths
+# Shared infrastructure — single source of truth
 # ---------------------------------------------------------------------------
-ROOT = Path(__file__).resolve().parent.parent
-CONTENT_DIR = ROOT / "content"
-GENERATED_DIR = ROOT / "generated"
-PREAMBLE_PATH = ROOT / "engine" / "preamble.tex"
-
-CONTACT_YAML = CONTENT_DIR / "contact.yaml"
-LAYOUT_YAML = CONTENT_DIR / "layout.yaml"
-BUILD_DIR = ROOT / "build"
-# boxheights.dat is written to the project root by LuaLaTeX (openout_any=p
-# forbids subdirectory writes), then moved to build/ by the Dockerfile.
-BOXHEIGHTS_PATH = BUILD_DIR / "boxheights.dat"
-CANVAS_TEX_PATH = GENERATED_DIR / "canvas.tex"
-
-# Page dimensions — keyed by paper_size.
-# These are physical paper sizes defined by ISO 216 (A4) and
-# ANSI/ASME Y14.1 (Letter). They are lookup values selected by the
-# paper_size field in contact.yaml.
-PAGE_SIZES: dict[str, tuple[float, float]] = {
-    "a4": (210.0, 297.0),
-    "letter": (215.9, 279.4),
-}
-
-# ---------------------------------------------------------------------------
-# Error helpers
-# ---------------------------------------------------------------------------
-
-def _die(msg: str) -> None:
-    print(f"ERROR: {msg}", file=sys.stderr)
-    sys.exit(1)
-
-
-def _require(value, name: str, source: str):
-    """Raise if value is None or empty string."""
-    if value is None or value == "":
-        _die(f"required parameter '{name}' not found in {source}")
-    return value
-
-
-# ---------------------------------------------------------------------------
-# YAML loaders
-# ---------------------------------------------------------------------------
-
-def load_contact() -> dict:
-    if not CONTACT_YAML.exists():
-        _die(f"{CONTACT_YAML} not found")
-    data = yaml.safe_load(CONTACT_YAML.read_text(encoding="utf-8"))
-    if not data:
-        _die(f"{CONTACT_YAML} is empty")
-    _require(data.get("paper_size"), "paper_size", "content/contact.yaml")
-    _require(data.get("margin"), "margin", "content/contact.yaml")
-    return data
-
-
-def load_layout() -> list[dict]:
-    if not LAYOUT_YAML.exists():
-        _die(f"{LAYOUT_YAML} not found")
-    data = yaml.safe_load(LAYOUT_YAML.read_text(encoding="utf-8"))
-    if not data or "sections" not in data:
-        _die(f"{LAYOUT_YAML} must contain a 'sections' list")
-    sections = data["sections"]
-    if not sections:
-        _die(f"{LAYOUT_YAML} 'sections' list is empty")
-    for i, sec in enumerate(sections):
-        _require(sec.get("title"), f"sections[{i}].title", "content/layout.yaml")
-        _require(sec.get("content"), f"sections[{i}].content", "content/layout.yaml")
-        col = _require(sec.get("column"), f"sections[{i}].column", "content/layout.yaml")
-        if col not in ("left", "right", "full"):
-            _die(
-                f"sections[{i}].column must be 'left', 'right', or 'full', "
-                f"got '{col}' in content/layout.yaml"
-            )
-    return sections
-
-
-# ---------------------------------------------------------------------------
-# Preamble parser
-# ---------------------------------------------------------------------------
-
-REQUIRED_PREAMBLE_PARAMS = [
-    "GridFontSize",
-    "MonoWidthRatio",
-    "ContentWidthScale",
-    "HeaderHeight",
-    "GapHeaderToContent",
-    "GapBoxToBox",
-    "LeftBoxWidth",
-    "ColumnGap",
-    "LeftBoxPadLeft",
-    "LeftBoxPadRight",
-    "LeftBoxPadTop",
-    "LeftBoxPadBot",
-    "RightBoxPadLeft",
-    "RightBoxPadRight",
-    "RightBoxPadTop",
-    "RightBoxPadBot",
-    "FullBoxPadLeft",
-    "FullBoxPadRight",
-    "FullBoxPadTop",
-    "FullBoxPadBot",
-]
-
-
-def parse_preamble() -> dict[str, float]:
-    """Parse \\newcommand{\\Name}{Value} from preamble.tex."""
-    if not PREAMBLE_PATH.exists():
-        _die(f"{PREAMBLE_PATH} not found")
-    text = PREAMBLE_PATH.read_text(encoding="utf-8")
-
-    pattern = re.compile(r"\\newcommand\{\\(\w+)\}\{([^}]+)\}")
-
-    found: dict[str, str] = {}
-    for m in pattern.finditer(text):
-        found[m.group(1)] = m.group(2).strip()
-
-    params: dict[str, float] = {}
-    for name in REQUIRED_PREAMBLE_PARAMS:
-        raw = found.get(name)
-        if raw is None:
-            _die(f"required parameter '\\{name}' not found in preamble.tex")
-        try:
-            params[name] = float(raw)
-        except ValueError:
-            _die(
-                f"parameter '\\{name}' in preamble.tex has non-numeric "
-                f"value '{raw}'"
-            )
-
-    return params
-
-
-# ---------------------------------------------------------------------------
-# Grid math (replicates preamble.tex §2 exactly)
-# ---------------------------------------------------------------------------
-
-def compute_grid(contact: dict, params: dict[str, float]) -> dict:
-    """Compute grid dimensions from contact.yaml + preamble.tex params."""
-    paper_size = contact["paper_size"].lower()
-    if paper_size not in PAGE_SIZES:
-        _die(
-            f"unknown paper_size '{paper_size}' in contact.yaml "
-            f"(must be one of: {', '.join(PAGE_SIZES)})"
-        )
-    page_w, page_h = PAGE_SIZES[paper_size]
-    margin = float(contact["margin"])
-
-    font_size = params["GridFontSize"]
-    mono_ratio = params["MonoWidthRatio"]
-    pt_to_mm = 25.4 / 72.0
-
-    cell_w = font_size * mono_ratio * pt_to_mm
-    cell_h = font_size * pt_to_mm
-
-    grid_cols = int(math.floor((page_w - 2 * margin) / cell_w))
-    grid_rows = int(math.floor((page_h - 2 * margin) / cell_h))
-
-    header_height = int(params["HeaderHeight"])
-    gap_header = params["GapHeaderToContent"]
-    gap_box = params["GapBoxToBox"]
-    content_start_y = header_height + gap_header
-
-    return {
-        "grid_cols": grid_cols,
-        "grid_rows": grid_rows,
-        "header_height": header_height,
-        "gap_header": gap_header,
-        "gap_box": gap_box,
-        "content_start_y": content_start_y,
-        "max_page_y": grid_rows,
-        # Padding per column type
-        "left_pad_top": params["LeftBoxPadTop"],
-        "left_pad_bot": params["LeftBoxPadBot"],
-        "right_pad_top": params["RightBoxPadTop"],
-        "right_pad_bot": params["RightBoxPadBot"],
-        "full_pad_top": params["FullBoxPadTop"],
-        "full_pad_bot": params["FullBoxPadBot"],
-    }
-
-
-def box_rows(content_rows: int, pad_top: float, pad_bot: float) -> int:
-    """Total box height: top border + padding + content + padding + bottom border.
-
-    Matches TeX's \\pgfmathtruncatemacro which truncates (floors for positive).
-    """
-    return int(1 + pad_top + content_rows + pad_bot + 1)
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from lib.config import (  # noqa: E402
+    ROOT,
+    GENERATED_DIR,
+    BOXHEIGHTS_PATH,
+    CANVAS_TEX_PATH,
+    HEADER_ENGINE_FILES,
+    VALID_HEADER_THEMES,
+    die,
+    load_contact,
+    load_layout,
+    parse_preamble,
+    compute_grid,
+    box_rows,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -238,7 +59,7 @@ def box_rows(content_rows: int, pad_top: float, pad_bot: float) -> int:
 def load_boxheights() -> dict[str, int]:
     """Load measured content heights from boxheights.dat."""
     if not BOXHEIGHTS_PATH.exists():
-        _die(
+        die(
             f"{BOXHEIGHTS_PATH} not found. "
             "Run the measurement pass (--measure + compile) first."
         )
@@ -255,7 +76,7 @@ def load_boxheights() -> dict[str, int]:
         try:
             heights[key] = int(val)
         except ValueError:
-            _die(f"invalid height value for '{key}' in boxheights.dat: '{val}'")
+            die(f"invalid height value for '{key}' in boxheights.dat: '{val}'")
     return heights
 
 
@@ -275,7 +96,7 @@ SPLIT_PATTERNS = [
 def find_split_boundaries(tex_path: Path) -> list[int]:
     """Return line indices (0-based) where a safe split can occur."""
     if not tex_path.exists():
-        _die(f"content file not found: {tex_path}")
+        die(f"content file not found: {tex_path}")
     lines = tex_path.read_text(encoding="utf-8").splitlines()
     boundaries: list[int] = []
     for i, line in enumerate(lines):
@@ -364,7 +185,10 @@ def split_content_file(
 # Canvas generation helpers
 # ---------------------------------------------------------------------------
 
-CANVAS_HEADER = """\
+def _canvas_header(header_theme: str) -> str:
+    """Build the canvas header block with the correct header engine file."""
+    header_file = HEADER_ENGINE_FILES[header_theme]
+    return f"""\
 % !! AUTO-GENERATED by scripts/layout.py — DO NOT EDIT !!
 % Source: content/layout.yaml
 
@@ -373,23 +197,23 @@ CANVAS_HEADER = """\
 % ===========================================================================
 
 % --- Load engine ---
-\\input{engine/header.tex}
-\\input{engine/leftbox.tex}
-\\input{engine/rightbox.tex}
-\\input{engine/fullbox.tex}
-\\input{engine/pageflow.tex}
+\\input{{{header_file}}}
+\\input{{engine/leftbox.tex}}
+\\input{{engine/rightbox.tex}}
+\\input{{engine/fullbox.tex}}
+\\input{{engine/pageflow.tex}}
 
 % --- Load contact data ---
-\\input{generated/contact.tex}
+\\input{{generated/contact.tex}}
 
 % --- Store header for repetition ---
 \\SetCVHeader
-    {\\StoredContactName}
-    {\\StoredContactTitle}
-    {\\StoredContactEmail}
-    {\\StoredContactPhone}
-    {\\StoredContactLinkedIn}
-    {\\StoredContactLocation}
+    {{\\StoredContactName}}
+    {{\\StoredContactTitle}}
+    {{\\StoredContactEmail}}
+    {{\\StoredContactPhone}}
+    {{\\StoredContactLinkedIn}}
+    {{\\StoredContactLocation}}
 
 """
 
@@ -416,7 +240,7 @@ def _emit_page_header(out: list[str], page: int) -> None:
 # MODE 1: --measure — generate passthrough canvas.tex
 # ---------------------------------------------------------------------------
 
-def generate_measure_canvas(sections: list[dict]) -> None:
+def generate_measure_canvas(sections: list[dict], header_theme: str) -> None:
     """Generate a passthrough canvas.tex that places all boxes sequentially.
 
     This is used for pass 1 so the box templates can measure content heights
@@ -426,7 +250,7 @@ def generate_measure_canvas(sections: list[dict]) -> None:
     right_secs = [s for s in sections if s["column"] == "right"]
     full_secs = [s for s in sections if s["column"] == "full"]
 
-    out: list[str] = [CANVAS_HEADER]
+    out: list[str] = [_canvas_header(header_theme)]
 
     _emit_page_header(out, 1)
 
@@ -480,6 +304,7 @@ def generate_layout_canvas(
     sections: list[dict],
     grid: dict,
     heights: dict[str, int],
+    header_theme: str,
 ) -> None:
     """Compute page layout, split overflowing content, write canvas.tex."""
 
@@ -487,7 +312,7 @@ def generate_layout_canvas(
     for sec in sections:
         key = f"generated/{sec['content']}"
         if key not in heights:
-            _die(
+            die(
                 f"no height measurement for '{key}' in boxheights.dat. "
                 "Re-run the measurement pass."
             )
@@ -499,6 +324,7 @@ def generate_layout_canvas(
     gap_box = grid["gap_box"]
     max_y = grid["max_page_y"]
     start_y = grid["content_start_y"]
+    min_split = grid["min_split_rows"]
 
     class BoxPlacement:
         def __init__(self, title: str, content_path: str, column: str, page: int):
@@ -549,7 +375,7 @@ def generate_layout_canvas(
                 boundaries = find_split_boundaries(tex_path)
 
                 split_done = False
-                if available_content >= 3 and boundaries:
+                if available_content >= min_split and boundaries:
                     total_lines = len(
                         tex_path.read_text(encoding="utf-8").splitlines()
                     )
@@ -619,7 +445,7 @@ def generate_layout_canvas(
     total_pages = max(left_max, right_max, full_max)
 
     # --- Generate canvas.tex ---
-    out: list[str] = [CANVAS_HEADER]
+    out: list[str] = [_canvas_header(header_theme)]
 
     for page in range(1, total_pages + 1):
         _emit_page_header(out, page)
@@ -693,15 +519,25 @@ def main() -> None:
         f"Max Y={grid['max_page_y']}"
     )
 
+    header_theme_raw = contact.get("header_theme")
+    if not header_theme_raw:
+        die("required field 'header_theme' not found in content/contact.yaml")
+    header_theme = str(header_theme_raw).lower()
+    if header_theme not in VALID_HEADER_THEMES:
+        die(
+            f"unknown header_theme '{header_theme}' in contact.yaml "
+            f"(must be one of: {', '.join(VALID_HEADER_THEMES)})"
+        )
+
     if mode == "--measure":
         print("Generating measurement canvas...")
-        generate_measure_canvas(sections)
+        generate_measure_canvas(sections, header_theme)
 
     elif mode == "--layout":
         heights = load_boxheights()
         print(f"Loaded heights: {heights}")
         print("Computing page layout...")
-        generate_layout_canvas(sections, grid, heights)
+        generate_layout_canvas(sections, grid, heights, header_theme)
 
 
 if __name__ == "__main__":

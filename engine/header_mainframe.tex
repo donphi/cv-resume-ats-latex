@@ -1,0 +1,142 @@
+% ============================================================================
+% TEMPLATES/HEADER_MAINFRAME.TEX — Mainframe ASCII-Art Name Header
+% ============================================================================
+%
+% ZERO hardcoded values. All parameters come from preamble.tex and
+% generated/header_name.tex (pre-computed by scripts/header.py).
+%
+% From preamble.tex:
+%   §6  \HeaderWidth, \HeaderHeight, \HeaderContactSep
+%   §4  \HSL, \HDL, \HDOT, \HC, \HSHADE  (header color shortcuts)
+%   §7  \CountTextCols, \Repeat
+%
+% From generated/header_name.tex (pre-computed — NO TeX-side name math):
+%   \HeaderNameRowA .. \HeaderNameRowE  (5 rows of ASCII art)
+%   \HeaderNameWidth                    (display width in columns)
+%   \NameDashLeft, \NameDashRight       (dash counts for row 0)
+%   \NameDotLeft, \NameDotRight         (dot counts for rows 1-4)
+%
+% STRUCTURE (6 rows):
+%   Row 0: ┌─────· NAME_ROW_A ·─────╖       (top border + first name row)
+%   Row 1: │······ NAME_ROW_B ······║       (dot fill + name row 2)
+%   Row 2: │······ NAME_ROW_C ······║       (dot fill + name row 3)
+%   Row 3: │······ NAME_ROW_D ······║       (dot fill + name row 4)
+%   Row 4: │······ NAME_ROW_E ······║       (dot fill + name row 5 / shadow)
+%   Row 5: ╘═· contact ·· contact ·═╝    (bottom border with contact)
+%
+% ============================================================================
+
+% --- Load pre-rendered name + pre-computed centering values ---
+\input{generated/header_name.tex}
+
+% ----------------------------------------------------------------------------
+% MAIN HEADER COMMAND
+% ----------------------------------------------------------------------------
+\newcommand{\CVHeader}[8]{%
+    % #1 = X, #2 = Y
+    % #3 = NAME (unused — pre-rendered), #4 = TITLE (unused for mainframe)
+    % #5 = email, #6 = phone, #7 = linkedin, #8 = location
+    %
+    % =========================================================================
+    % STEP 1: CONTACT LINE MATH (only thing computed in TeX)
+    % =========================================================================
+    %
+    \CountTextCols{#5}%
+    \pgfmathtruncatemacro{\emailLen}{\measuredColsInt}%
+    %
+    \CountTextCols{#6}%
+    \pgfmathtruncatemacro{\phoneLen}{\measuredColsInt}%
+    %
+    \CountTextCols{#7}%
+    \pgfmathtruncatemacro{\linkedinLen}{\measuredColsInt}%
+    %
+    \CountTextCols{#8}%
+    \pgfmathtruncatemacro{\locationLen}{\measuredColsInt}%
+    %
+    % Bottom border contact row:
+    %   ╘(1) + ═(1) + ·(1) + pad + items + pad + ·(1) + ═(1) + ╝(1)
+    %   Fixed border = 6 chars
+    %   Each item: space(1) + ITEM + space(1) = 2 + itemLen
+    %
+    \pgfmathtruncatemacro{\contactTextOnly}{%
+        (2 + \emailLen) + (2 + \phoneLen) + (2 + \linkedinLen) + (2 + \locationLen)%
+    }%
+    \pgfmathtruncatemacro{\contactAvail}{\HeaderWidth - 6 - \contactTextOnly}%
+    \pgfmathtruncatemacro{\contactSep}{max(1, min(\HeaderContactSep, \contactAvail / 3))}%
+    \pgfmathtruncatemacro{\contactOuter}{max(0, \contactAvail - 3 * \contactSep)}%
+    \pgfmathtruncatemacro{\contactPadLeft}{\contactOuter / 2}%
+    \pgfmathtruncatemacro{\contactPadRight}{\contactOuter - \contactPadLeft}%
+    %
+    % =========================================================================
+    % STEP 2: DEBUG
+    % =========================================================================
+    \typeout{==================================================}%
+    \typeout{HEADER MAINFRAME DEBUG: HeaderWidth = \HeaderWidth}%
+    \typeout{HEADER MAINFRAME DEBUG: NameDashLeft = \NameDashLeft, NameDashRight = \NameDashRight}%
+    \typeout{HEADER MAINFRAME DEBUG: NameDotLeft = \NameDotLeft, NameDotRight = \NameDotRight}%
+    \typeout{HEADER MAINFRAME DEBUG: contactSep = \contactSep, contactPadLeft = \contactPadLeft, contactPadRight = \contactPadRight}%
+    \typeout{==================================================}%
+    %
+    % =========================================================================
+    % STEP 3: DRAW HEADER
+    % =========================================================================
+    \begin{textblock}{\HeaderWidth}(#1,#2)%
+        \mono%
+        \baselineskip=0pt\relax%
+        \lineskip=0pt\relax%
+        \lineskiplimit=0pt\relax%
+        \parskip=0pt\relax%
+        \offinterlineskip%
+        %
+        % ROW 0–4: Name art rows
+        % Block/shade chars (█▀▄░╔═╗║) are 11.25pt tall (1.25× grid cell).
+        % \FullHRow lets each row use its natural height — no clipping.
+        %
+        % ROW 0: Top border + Name row A
+        \FullHRow{%
+            {\HSL┌\Repeat{\NameDashLeft}{─}}·%
+            ~{\HSHADE\HeaderNameRowA}~%
+            ·{\HSL\Repeat{\NameDashRight}{─}}{\HDL╖}%
+        }%
+        %
+        % ROW 1: Name row B (dot-filled)
+        \FullHRow{%
+            {\HSL│}{\HDOT\Repeat{\NameDotLeft}{·}}%
+            ~{\HSHADE\HeaderNameRowB}~%
+            {\HDOT\Repeat{\NameDotRight}{·}}{\HDL║}%
+        }%
+        %
+        % ROW 2: Name row C (dot-filled)
+        \FullHRow{%
+            {\HSL│}{\HDOT\Repeat{\NameDotLeft}{·}}%
+            ~{\HSHADE\HeaderNameRowC}~%
+            {\HDOT\Repeat{\NameDotRight}{·}}{\HDL║}%
+        }%
+        %
+        % ROW 3: Name row D (dot-filled)
+        \FullHRow{%
+            {\HSL│}{\HDOT\Repeat{\NameDotLeft}{·}}%
+            ~{\HSHADE\HeaderNameRowD}~%
+            {\HDOT\Repeat{\NameDotRight}{·}}{\HDL║}%
+        }%
+        %
+        % ROW 4: Name row E / shadow (dot-filled)
+        \FullHRow{%
+            {\HSL│}{\HDOT\Repeat{\NameDotLeft}{·}}%
+            ~{\HSHADE\HeaderNameRowE}~%
+            {\HDOT\Repeat{\NameDotRight}{·}}{\HDL║}%
+        }%
+        %
+        % ROW 5: Bottom border with contact info
+        \vbox to \TPVertModule{\vss\hbox{%
+            {\HDL╘═}{\HDOT·\Repeat{\contactPadLeft}{·}}%
+            { }#5{ }{\HDOT\Repeat{\contactSep}{·}}%
+            { }#6{ }{\HDOT\Repeat{\contactSep}{·}}%
+            { }#7{ }{\HDOT\Repeat{\contactSep}{·}}%
+            { }#8{ }%
+            {\HDOT\Repeat{\contactPadRight}{·}·}{\HDL═╝}%
+        }\vss}%
+    \end{textblock}%
+}
+
+\endinput

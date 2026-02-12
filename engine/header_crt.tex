@@ -1,0 +1,136 @@
+% ============================================================================
+% TEMPLATES/HEADER_CRT.TEX — CRT Block-Font Name Header
+% ============================================================================
+%
+% ZERO hardcoded values. All parameters come from preamble.tex and
+% generated/header_name.tex (pre-computed by scripts/header.py).
+%
+% From preamble.tex:
+%   §6  \HeaderWidth, \HeaderHeight, \HeaderContactSep
+%   §4  \HSL, \HDL, \HDOT, \HC, \HSHADE  (header color shortcuts)
+%   §7  \CountTextCols, \Repeat
+%
+% From generated/header_name.tex (pre-computed — NO TeX-side name math):
+%   \HeaderNameRowA .. \HeaderNameRowD  (4 rows of ASCII art)
+%   \HeaderNameWidth                    (display width in columns)
+%   \NameDashLeft, \NameDashRight       (dash counts for row 0)
+%   \NameDotLeft, \NameDotRight         (dot counts for rows 1-3)
+%
+% STRUCTURE (6 rows):
+%   Row 0: ┌────· NAME_ROW_A ·────╖       (top border + first name row)
+%   Row 1: │····· NAME_ROW_B ·····║       (dot fill + name row 2)
+%   Row 2: │····· NAME_ROW_C ·····║       (dot fill + name row 3)
+%   Row 3: │····· NAME_ROW_D ·····║       (dot fill + name row 4 / shadow)
+%   Row 4: │···· contact info ····║       (contact line, same as classic)
+%   Row 5: ╘══════════════════════╝      (bottom border)
+%
+% ============================================================================
+
+% --- Load pre-rendered name + pre-computed centering values ---
+\input{generated/header_name.tex}
+
+% ----------------------------------------------------------------------------
+% MAIN HEADER COMMAND
+% ----------------------------------------------------------------------------
+\newcommand{\CVHeader}[8]{%
+    % #1 = X, #2 = Y
+    % #3 = NAME (unused — pre-rendered), #4 = TITLE (unused for crt)
+    % #5 = email, #6 = phone, #7 = linkedin, #8 = location
+    %
+    % =========================================================================
+    % STEP 1: CONTACT LINE MATH (identical to classic header.tex)
+    % =========================================================================
+    %
+    \CountTextCols{#5}%
+    \pgfmathtruncatemacro{\emailLen}{\measuredColsInt}%
+    %
+    \CountTextCols{#6}%
+    \pgfmathtruncatemacro{\phoneLen}{\measuredColsInt}%
+    %
+    \CountTextCols{#7}%
+    \pgfmathtruncatemacro{\linkedinLen}{\measuredColsInt}%
+    %
+    \CountTextCols{#8}%
+    \pgfmathtruncatemacro{\locationLen}{\measuredColsInt}%
+    %
+    % Contact row: │(1) + outerL + items + outerR + ║(1)
+    % Each item: space(1) + ITEM + space(1) = 2 + itemLen
+    %
+    \pgfmathtruncatemacro{\contactTextOnly}{%
+        (2 + \emailLen) + (2 + \phoneLen) + (2 + \linkedinLen) + (2 + \locationLen)%
+    }%
+    \pgfmathtruncatemacro{\contactAvail}{\HeaderWidth - 2 - \contactTextOnly}%
+    \pgfmathtruncatemacro{\contactSep}{max(0, min(\HeaderContactSep, \contactAvail / 5))}%
+    \pgfmathtruncatemacro{\contactOuter}{max(0, \contactAvail - 3 * \contactSep)}%
+    \pgfmathtruncatemacro{\contactDashLeft}{\contactOuter / 2}%
+    \pgfmathtruncatemacro{\contactDashRight}{\contactOuter - \contactDashLeft}%
+    %
+    \pgfmathtruncatemacro{\innerW}{\HeaderWidth - 2}%
+    %
+    % =========================================================================
+    % STEP 2: DEBUG
+    % =========================================================================
+    \typeout{==================================================}%
+    \typeout{HEADER CRT DEBUG: HeaderWidth = \HeaderWidth}%
+    \typeout{HEADER CRT DEBUG: NameDashLeft = \NameDashLeft, NameDashRight = \NameDashRight}%
+    \typeout{HEADER CRT DEBUG: NameDotLeft = \NameDotLeft, NameDotRight = \NameDotRight}%
+    \typeout{HEADER CRT DEBUG: contactSep = \contactSep, contactDashLeft = \contactDashLeft, contactDashRight = \contactDashRight}%
+    \typeout{==================================================}%
+    %
+    % =========================================================================
+    % STEP 3: DRAW HEADER
+    % =========================================================================
+    \begin{textblock}{\HeaderWidth}(#1,#2)%
+        \mono%
+        \baselineskip=0pt\relax%
+        \lineskip=0pt\relax%
+        \lineskiplimit=0pt\relax%
+        \parskip=0pt\relax%
+        \offinterlineskip%
+        %
+        % ROW 0: Top border + Name row A
+        % Block/shade chars (█▀▄░) are 11.25pt tall (1.25× grid cell).
+        % \FullHRow lets each row use its natural height — no clipping.
+        \FullHRow{%
+            {\HSL┌\Repeat{\NameDashLeft}{─}}·%
+            ~{\HSHADE\HeaderNameRowA}~%
+            ·{\HSL\Repeat{\NameDashRight}{─}}{\HDL╖}%
+        }%
+        %
+        % ROW 1: Name row B (dot-filled)
+        \FullHRow{%
+            {\HSL│}{\HDOT\Repeat{\NameDotLeft}{·}}%
+            ~{\HSHADE\HeaderNameRowB}~%
+            {\HDOT\Repeat{\NameDotRight}{·}}{\HDL║}%
+        }%
+        %
+        % ROW 2: Name row C (dot-filled)
+        \FullHRow{%
+            {\HSL│}{\HDOT\Repeat{\NameDotLeft}{·}}%
+            ~{\HSHADE\HeaderNameRowC}~%
+            {\HDOT\Repeat{\NameDotRight}{·}}{\HDL║}%
+        }%
+        %
+        % ROW 3: Name row D / shadow (dot-filled)
+        \FullHRow{%
+            {\HSL│}{\HDOT\Repeat{\NameDotLeft}{·}}%
+            ~{\HSHADE\HeaderNameRowD}~%
+            {\HDOT\Repeat{\NameDotRight}{·}}{\HDL║}%
+        }%
+        %
+        % ROW 4: Contact info (dot-filled, auto-spaced — identical to classic)
+        \vbox to \TPVertModule{\vss\hbox{%
+            {\HSL│}{\HDOT\Repeat{\contactDashLeft}{·}}%
+            { }#5{ }{\HDOT\Repeat{\contactSep}{·}}%
+            { }#6{ }{\HDOT\Repeat{\contactSep}{·}}%
+            { }#7{ }{\HDOT\Repeat{\contactSep}{·}}%
+            { }#8{ }%
+            {\HDOT\Repeat{\contactDashRight}{·}}{\HDL║}%
+        }\vss}%
+        %
+        % ROW 5: Bottom border
+        \vbox to \TPVertModule{\vss\hbox{{\HDL╘\Repeat{\innerW}{═}╝}}\vss}%
+    \end{textblock}%
+}
+
+\endinput

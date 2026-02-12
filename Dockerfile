@@ -25,8 +25,10 @@ WORKDIR /data
 CMD ["sh", "-c", "\
     sh scripts/fetch-fonts.sh \
     && python3 scripts/generate.py \
+    && python3 scripts/header.py \
     && mkdir -p build \
-    && (rm -f generated/*-p[0-9]*.tex 2>/dev/null; rm -f build/boxheights.dat; true) \
+    && rm -f build/*.aux build/*.fls build/*.fdb_latexmk build/*.log build/*.out build/boxheights.dat \
+    && (rm -f generated/*-p[0-9]*.tex 2>/dev/null; true) \
     && python3 scripts/layout.py --measure \
     && . generated/.build-meta \
     && latexmk -lualatex -auxdir=build -outdir=build -interaction=nonstopmode -jobname=\"${OUTPUT_NAME}-${OUTPUT_TYPE}\" main.tex \

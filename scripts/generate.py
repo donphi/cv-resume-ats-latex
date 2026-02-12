@@ -48,12 +48,14 @@ except ImportError:
     )
     sys.exit(1)
 
+# Import shared constants — single source of truth for valid themes.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from lib.config import ROOT, CONTENT_DIR, GENERATED_DIR, VALID_HEADER_THEMES  # noqa: E402
+
 # ---------------------------------------------------------------------------
 # Paths
 # ---------------------------------------------------------------------------
-ROOT = Path(__file__).resolve().parent.parent
-DATA_DIR = ROOT / "content"
-GENERATED_DIR = ROOT / "generated"
+DATA_DIR = CONTENT_DIR
 OUTPUT_ATS = ROOT / "main_ats.tex"
 
 GENERATED_HEADER = (
@@ -179,9 +181,28 @@ def gen_settings(contact: dict) -> str:
               file=sys.stderr)
         margin = default_margin
 
+    # Header theme — required, no default
+    header_theme_raw = contact.get("header_theme")
+    if not header_theme_raw:
+        print(
+            "ERROR: required field 'header_theme' not found in content/contact.yaml\n"
+            f"       Must be one of: {', '.join(VALID_HEADER_THEMES)}",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+    header_theme = str(header_theme_raw).lower()
+    if header_theme not in VALID_HEADER_THEMES:
+        print(
+            f"ERROR: invalid header_theme '{header_theme_raw}' in content/contact.yaml\n"
+            f"       Must be one of: {', '.join(VALID_HEADER_THEMES)}",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
     lines = [GENERATED_HEADER.format(source="contact")]
     lines.append(f"\\def\\PageFormat{{{paper_size}}}")
     lines.append(f"\\def\\PageMarginMM{{{margin}}}")
+    lines.append(f"\\def\\HeaderTheme{{{header_theme}}}")
     return "\n".join(lines) + "\n"
 
 
