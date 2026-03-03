@@ -95,6 +95,11 @@
 % --- Master parameters ------------------------------------------------------
 \newcommand{\GridFontSize}{9}             % pt — base size for mono grid
 \newcommand{\MonoWidthRatio}{0.6}         % monospace width:height (0.6 = Extended)
+\newcommand{\MonoLeadingRatio}{1.25}      % Iosevka Extended leading = 1250/1000
+                                           % Vertical-spanning glyphs (│ ║ █ ░)
+                                           % are exactly GridFontSize * this tall.
+                                           % One grid row = one glyph height so
+                                           % box-drawing chars tile with zero gaps.
 \newcommand{\ContentWidthScale}{1.0}      % no scaling — minipage width = available space
 
 % --- Step 1: cell size (from font metrics) ----------------------------------
@@ -102,9 +107,12 @@
 %     (NOT PostScript big-points where 1bp = 25.4mm / 72.)
 %     Using the correct TeX-pt conversion keeps the grid cell size
 %     exactly equal to the monospace advance width at \GridFontSize.
+%
+%     CellHeight includes the font leading ratio so that one grid row
+%     equals the full glyph height of vertical-spanning characters.
 \newcommand{\PtToMM}{\fpeval{25.4 / 72.27}}% = 0.35146… mm per TeX pt
 \newcommand{\CellWidth}{\fpeval{\GridFontSize * \MonoWidthRatio * \PtToMM}}
-\newcommand{\CellHeight}{\fpeval{\GridFontSize * \PtToMM}}
+\newcommand{\CellHeight}{\fpeval{\GridFontSize * \MonoLeadingRatio * \PtToMM}}
 
 % --- Step 2: grid dimensions (from minimum margin) --------------------------
 %     How many whole cells fit between the margins?
@@ -133,10 +141,21 @@
 %     font unit) avoids any mm↔pt conversion rounding, so 1 grid column
 %     equals 1 monospace character cell exactly.
 \newcommand{\CellWidthPt}{\fpeval{\GridFontSize * \MonoWidthRatio}}%  pt
-\newcommand{\CellHeightPt}{\fpeval{\GridFontSize}}%                   pt
+\newcommand{\CellHeightPt}{\fpeval{\GridFontSize * \MonoLeadingRatio}}% pt (includes leading)
 \TPHorizModule=\CellWidthPt pt\relax
 \TPVertModule=\CellHeightPt pt\relax
 \textblockorigin{\MarginH mm}{\MarginV mm}% origin = top-left of snapped margins
+
+% --- Border row height (em-square only, no leading) ------------------------
+%     Top/bottom border chars (┌ ─ ╖ ╘ ═ ╝) are em-square height, not
+%     full-leading height like │ ║ █.  Use this for border rows so they
+%     sit flush against the adjacent body rows.
+\newlength{\BorderRowHeight}
+% \setlength{\BorderRowHeight}{\GridFontSize pt}  % exact em-square height
+\setlength{\BorderRowHeight}{0.98\dimexpr\GridFontSize pt\relax}
+
+%     As a fraction of one grid row (for textpos coordinate math):
+\newcommand{\BorderRowGrid}{\fpeval{1 / \MonoLeadingRatio}}% = 0.8 at 1.25
 
 % --- Kill all default LaTeX spacing -----------------------------------------
 \setlength{\parindent}{0pt}
@@ -500,10 +519,11 @@
 % ============================================================================
 
 % --- Content line height ----------------------------------------------------
-%     Body text baselineskip as a multiple of one grid row.
-%     1.0 = text sits exactly on grid lines (tight).
-%     1.2 = 20% extra leading (current default, readable).
-\newcommand{\ContentLeading}{1.2}
+%     Body text baselineskip as a multiple of one grid row (\TPVertModule).
+%     Grid row = GridFontSize * MonoLeadingRatio = 11.25pt (at 9pt/1.25).
+%     1.0 = text baselineskip equals one grid row (11.25pt).
+%     0.96 = 10.8pt baselineskip (matches the previous 1.2 × 9pt).
+\newcommand{\ContentLeading}{0.96}
 
 % --- Vertical gaps (in grid rows) -------------------------------------------
 %     Used via \vspace{\GapFoo\TPVertModule} in components.
@@ -554,25 +574,10 @@
 % ============================================================================
 
 % --- Header (master) -------------------------------------------------------
-%   Block/shade chars in Iosevka Extended are 11.25pt tall (1.25× the 9pt
-%   grid cell).  The CRT and mainframe headers let those rows use their
-%   natural height via \FullHRow, so the header occupies more grid rows
-%   than the classic theme.
-%
-%     classic    : 6 rows × 9pt                      = 54pt   → 6 grid rows
-%     crt        : 4 × 11.25pt + 2 × 9pt             = 63pt   → 7 grid rows
-%     mainframe  : 5 × 11.25pt + 1 × 9pt             = 65.25pt → 7 grid rows
-%
-\def\tmpThemeClassic{classic}
-\def\tmpThemeCrt{crt}
-\def\tmpThemeMainframe{mainframe}
-\ifx\HeaderTheme\tmpThemeMainframe
-    \newcommand{\HeaderHeight}{7}
-\else\ifx\HeaderTheme\tmpThemeCrt
-    \newcommand{\HeaderHeight}{7}
-\else
-    \newcommand{\HeaderHeight}{6}
-\fi\fi
+%   All header themes have 6 rows.  Now that \TPVertModule includes the
+%   font leading ratio (11.25pt at 9pt/1.25), every row — whether drawn
+%   via \FullHRow or \vbox to \TPVertModule — occupies exactly 1 grid row.
+\newcommand{\HeaderHeight}{6}
 \newcommand{\HeaderContactSep}{3}           % preferred max dot-spaces between contact items
                                              % (header.tex auto-reduces to fit; set higher for wider margins)
 
@@ -662,22 +667,15 @@
     \StrLen{#1}[\measuredColsInt]%
 }
 
-% \FullHRow{content} — stack a header row at its NATURAL glyph height.
-%   NO CLIPPING.
+% \FullHRow{content} — stack a row at its NATURAL glyph height.
 %
-%   MEASURED FACTS (Iosevka Extended at \GridFontSize = 9pt):
-%     All characters: wd = 5.4pt (grid-perfect)
-%     Block / shade / vert-spanning chars (█░▓║│▀▄):
-%       ht = 8.685pt, dp = 2.565pt, total = 11.25pt
-%     Grid cell (\TPVertModule) = 9pt
-%     Font leading = 1250/1000 = 1.25  →  9pt × 1.25 = 11.25pt
-%
-%   Block/shade chars are designed to span the full line height (1.25×em),
-%   NOT just the em-square.  Instead of clipping them to fit a 9pt cell
-%   (which cuts off ink or creates gaps), we let each row be its natural
-%   height.  We RAISE the content by its depth so all ink sits above the
-%   baseline (dp→0, ht→ht+dp).  Rows stack flush via \offinterlineskip
-%   and the shade/block patterns tile seamlessly with zero gaps.
+%   Now that \TPVertModule = GridFontSize × MonoLeadingRatio (= 11.25pt
+%   at 9pt/1.25), the natural glyph height equals one grid row, so
+%   \FullHRow and \vbox to \TPVertModule produce the same physical height.
+%   \FullHRow is kept for header templates that use block/shade chars
+%   (█░▓║│▀▄) — it raises the content by its depth so all ink sits above
+%   the baseline (dp→0, ht→ht+dp) and rows tile flush via
+%   \offinterlineskip.
 \newsavebox{\hrowbox}
 \newcommand{\FullHRow}[1]{%
     \sbox{\hrowbox}{#1}%

@@ -89,8 +89,7 @@
         \offinterlineskip%
         %
         % ROW 0–4: Name art rows
-        % Block/shade chars (█▀▄░╔═╗║) are 11.25pt tall (1.25× grid cell).
-        % \FullHRow lets each row use its natural height — no clipping.
+        % \FullHRow raises block/shade chars so they tile flush.
         %
         % ROW 0: Top border + Name row A
         \FullHRow{%
@@ -128,7 +127,7 @@
         }%
         %
         % ROW 5: Bottom border with contact info
-        \vbox to \TPVertModule{\vss\hbox{%
+        \vbox to \BorderRowHeight{\vss\hbox{%
             {\HDL╘═}{\HDOT·\Repeat{\contactPadLeft}{·}}%
             { }#5{ }{\HDOT\Repeat{\contactSep}{·}}%
             { }#6{ }{\HDOT\Repeat{\contactSep}{·}}%

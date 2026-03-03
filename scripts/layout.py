@@ -48,7 +48,7 @@ from lib.config import (  # noqa: E402
     load_layout,
     parse_preamble,
     compute_grid,
-    box_rows,
+    box_height,
 )
 
 
@@ -353,6 +353,7 @@ def generate_layout_canvas(
     max_y = grid["max_page_y"]
     content_start_y = grid["content_start_y"]
     min_split = grid["min_split_rows"]
+    leading_ratio = grid["leading_ratio"]
 
     class BoxPlacement:
         __slots__ = ("title", "content_path", "column", "page", "init_y",
@@ -395,7 +396,7 @@ def generate_layout_canvas(
             content_key = f"generated/{sec['content']}"
             title = sec["title"]
             c_rows = heights[content_key]
-            b_rows = box_rows(c_rows, pad_top(column), pad_bot(column))
+            b_rows = box_height(c_rows, pad_top(column), pad_bot(column), leading_ratio)
 
             gap_needed = gap_box if (
                 i > 0 and placements and placements[-1].page == current_page
@@ -410,8 +411,9 @@ def generate_layout_canvas(
                 ))
                 current_y += b_rows
             else:
+                border_grid = 1.0 / leading_ratio
                 available_content = int(
-                    max_y - test_y - 1 - pad_top(column) - pad_bot(column) - 1
+                    max_y - test_y - border_grid - pad_top(column) - pad_bot(column) - border_grid
                 )
 
                 tex_path = GENERATED_DIR / sec["content"]
@@ -426,8 +428,8 @@ def generate_layout_canvas(
                     for bi, bline in enumerate(boundaries):
                         fraction = bline / total_lines if total_lines > 0 else 0
                         est_rows = int(math.ceil(c_rows * fraction))
-                        est_box = box_rows(
-                            est_rows, pad_top(column), pad_bot(column)
+                        est_box = box_height(
+                            est_rows, pad_top(column), pad_bot(column), leading_ratio
                         )
                         if test_y + est_box <= max_y:
                             best_boundary = bi
@@ -465,8 +467,8 @@ def generate_layout_canvas(
                         remaining_rows = max(1, int(math.ceil(
                             c_rows * remaining_fraction
                         )))
-                        current_y += box_rows(
-                            remaining_rows, pad_top(column), pad_bot(column)
+                        current_y += box_height(
+                            remaining_rows, pad_top(column), pad_bot(column), leading_ratio
                         )
                         split_done = True
 

@@ -129,8 +129,8 @@
         \parskip=0pt\relax%
         \offinterlineskip%
         %
-        % ROW 0: Name
-        \vbox to \TPVertModule{\vss\hbox{%
+        % ROW 0: Name (top border)
+        \vbox to \BorderRowHeight{\vss\hbox{%
             {\HSL┌\Repeat{\nameDashLeft}{─}}· \textbf{\MakeUppercase{#3}}{\HC▌}·{\HSL\Repeat{\nameDashRight}{─}}{\HDL╖}%
         }\vss}%
         %
@@ -158,7 +158,7 @@
         }\vss}%
         %
         % ROW 5: Bottom border
-        \vbox to \TPVertModule{\vss\hbox{{\HDL╘\Repeat{\innerW}{═}╝}}\vss}%
+        \vbox to \BorderRowHeight{\vss\hbox{{\HDL╘\Repeat{\innerW}{═}╝}}\vss}%
     \end{textblock}%
 }
 

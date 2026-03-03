@@ -89,8 +89,7 @@
         \offinterlineskip%
         %
         % ROW 0: Top border + Name row A
-        % Block/shade chars (█▀▄░) are 11.25pt tall (1.25× grid cell).
-        % \FullHRow lets each row use its natural height — no clipping.
+        % \FullHRow raises block/shade chars so they tile flush.
         \FullHRow{%
             {\HSL┌\Repeat{\NameDashLeft}{─}}·%
             ~{\HSHADE\HeaderNameRowA}~%
@@ -129,7 +128,7 @@
         }\vss}%
         %
         % ROW 5: Bottom border
-        \vbox to \TPVertModule{\vss\hbox{{\HDL╘\Repeat{\innerW}{═}╝}}\vss}%
+        \vbox to \BorderRowHeight{\vss\hbox{{\HDL╘\Repeat{\innerW}{═}╝}}\vss}%
     \end{textblock}%
 }
 

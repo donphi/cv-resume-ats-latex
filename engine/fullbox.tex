@@ -78,13 +78,14 @@
     \pgfmathsetmacro{\rawHeightPt}{\ht\FullMeasureBox + \dp\FullMeasureBox}%
     \pgfmathtruncatemacro{\contentRows}{ceil(\rawHeightPt / \TPVertModule)}%
     %
-    % Total box height = top border + padding + content + padding + bottom border
-    \pgfmathtruncatemacro{\boxRows}{1 + \FullBoxPadTop + \contentRows + \FullBoxPadBot + 1}%
-    \pgfmathtruncatemacro{\bodyRows}{\boxRows - 2}%
+    % Total box height (in grid units):
+    %   border rows are \BorderRowGrid grid units (< 1), body rows are 1 each.
+    \pgfmathtruncatemacro{\bodyRows}{\FullBoxPadTop + \contentRows + \FullBoxPadBot}%
+    \pgfmathsetmacro{\boxHeight}{2*\BorderRowGrid + \bodyRows}%
     \pgfmathtruncatemacro{\innerW}{\FullBoxWidth - 2}%
     %
     % Debug output (visible in .log file)
-    \typeout{FULLBOX [\detokenize{#1}]: rawPt=\rawHeightPt, contentRows=\contentRows, boxRows=\boxRows}%
+    \typeout{FULLBOX [\detokenize{#1}]: rawPt=\rawHeightPt, contentRows=\contentRows, bodyRows=\bodyRows, boxHeight=\boxHeight}%
     \LogBoxHeight{#2}{\contentRows}%
     %
     % =========================================================================
@@ -103,13 +104,13 @@
         \offinterlineskip%
         %
         % Top border with title
-        \vbox to \TPVertModule{\vss\hbox{{\FSL┌─·} \textbf{#1} {\FSL·\Repeat{\dashCount}{─}}{\FDL╖}}\vss}%
+        \vbox to \BorderRowHeight{\vss\hbox{{\FSL┌─·} \textbf{#1} {\FSL·\Repeat{\dashCount}{─}}{\FDL╖}}\vss}%
         % Body rows (dot-filled)
         \foreach \n in {1,...,\bodyRows}{%
             \vbox to \TPVertModule{\vss\hbox{{\FSL│}{\FDOT\Repeat{\innerW}{·}}{\FDL║}}\vss}%
         }%
         % Bottom border
-        \vbox to \TPVertModule{\vss\hbox{{\FDL╘\Repeat{\innerW}{═}╝}}\vss}%
+        \vbox to \BorderRowHeight{\vss\hbox{{\FDL╘\Repeat{\innerW}{═}╝}}\vss}%
     \end{textblock}%
     %
     % =========================================================================
@@ -117,9 +118,9 @@
     % =========================================================================
     %
     % Layer 1: Background rectangle with 1 dot visible on each side.
-    %          Uses integer grid units and a bare \rule for exact dimensions.
+    %          Border rows are \BorderRowGrid grid units; body rows are 1 each.
     \pgfmathsetmacro{\bgX}{\FullPosX + 2}%
-    \pgfmathsetmacro{\bgY}{\FullPosY + 2}%
+    \pgfmathsetmacro{\bgY}{\FullPosY + \BorderRowGrid + 1}%
     \pgfmathtruncatemacro{\bgW}{\innerW - 2}%
     \pgfmathtruncatemacro{\bgH}{\bodyRows - 2}%
     \begin{textblock}{\bgW}(\bgX,\bgY)%
@@ -128,7 +129,7 @@
     %
     % Layer 2: Content text, positioned with padding offsets on top of the bg.
     \pgfmathsetmacro{\contentX}{\FullPosX + \FullBoxPadLeft}%
-    \pgfmathsetmacro{\contentY}{\FullPosY + 1 + \FullBoxPadTop}%
+    \pgfmathsetmacro{\contentY}{\FullPosY + \BorderRowGrid + \FullBoxPadTop}%
     \begin{textblock}{\FullContentWidth}(\contentX,\contentY)%
         \begin{minipage}{\FullContentWidth\TPHorizModule}%
             \FullTypography%
@@ -139,7 +140,7 @@
     % =========================================================================
     % STEP 4: UPDATE Y FOR NEXT BOX
     % =========================================================================
-    \pgfmathsetmacro{\newY}{\FullPosY + \boxRows}%
+    \pgfmathsetmacro{\newY}{\FullPosY + \boxHeight}%
     \xdef\FullPosY{\newY}%
 }
 

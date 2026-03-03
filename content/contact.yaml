@@ -16,7 +16,7 @@
 #   How the grid works
 #   ──────────────────
 #   The designed CV lays out text on a fixed character grid. Each cell
-#   is 1.905 mm wide × 3.175 mm tall (9 pt Iosevka Extended, ratio 0.6).
+#   is 1.898 mm wide × 3.163 mm tall (9 pt Iosevka Extended, ratio 0.6).
 #   The engine fits as many whole cells as possible inside the page,
 #   then centres the grid — the leftover space becomes the margin:
 #
@@ -27,7 +27,7 @@
 #       │ m  │    character grid area        │ m  │
 #       │ a  │    (cols × rows of cells)     │ a  │
 #       │ r  │                               │ r  │
-#       │ g  │    Each cell = 1.905 × 3.175  │ g  │
+#       │ g  │    Each cell = 1.898 × 3.163  │ g  │
 #       │ i  │    (width × height in mm)     │ i  │
 #       │ n  │                               │ n  │
 #       │    │   The grid is centred on the  │    │
@@ -41,8 +41,8 @@
 #       │             margin (bottom)             │
 #       └─────────────────────────────────────────┘
 #
-#       margin_h = (page_width  − cols × 1.905) / 2
-#       margin_v = (page_height − rows × 3.175) / 2
+#       margin_h = (page_width  − cols × 1.898) / 2
+#       margin_v = (page_height − rows × 3.163) / 2
 #
 #   At a "sweet spot" margin_h ≈ margin_v (difference < 0.003 mm),
 #   so all four margins look identical. At other values the grid

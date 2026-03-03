@@ -128,6 +128,7 @@ def load_layout() -> list[dict]:
 REQUIRED_PREAMBLE_PARAMS = [
     "GridFontSize",
     "MonoWidthRatio",
+    "MonoLeadingRatio",
     "ContentWidthScale",
     "HeaderHeight",
     "GapHeaderToContent",
@@ -182,8 +183,8 @@ def parse_preamble() -> dict[str, float]:
 # Grid math (replicates preamble.tex §2 exactly)
 # ---------------------------------------------------------------------------
 
-# 1 pt = 25.4 mm / 72  (standard TeX PostScript point)
-PT_TO_MM = 25.4 / 72.0
+# 1 TeX pt = 25.4 mm / 72.27  (TeX point, NOT PostScript bp = 25.4/72)
+PT_TO_MM = 25.4 / 72.27
 
 
 def compute_grid(contact: dict, params: dict[str, float]) -> dict:
@@ -199,9 +200,10 @@ def compute_grid(contact: dict, params: dict[str, float]) -> dict:
 
     font_size = params["GridFontSize"]
     mono_ratio = params["MonoWidthRatio"]
+    leading_ratio = params["MonoLeadingRatio"]
 
     cell_w = font_size * mono_ratio * PT_TO_MM
-    cell_h = font_size * PT_TO_MM
+    cell_h = font_size * leading_ratio * PT_TO_MM
 
     grid_cols = int(math.floor((page_w - 2 * margin) / cell_w))
     grid_rows = int(math.floor((page_h - 2 * margin) / cell_h))
@@ -219,6 +221,7 @@ def compute_grid(contact: dict, params: dict[str, float]) -> dict:
         "gap_box": gap_box,
         "content_start_y": content_start_y,
         "max_page_y": grid_rows,
+        "leading_ratio": leading_ratio,
         # Padding per column type
         "left_pad_top": params["LeftBoxPadTop"],
         "left_pad_bot": params["LeftBoxPadBot"],
@@ -230,9 +233,13 @@ def compute_grid(contact: dict, params: dict[str, float]) -> dict:
     }
 
 
-def box_rows(content_rows: int, pad_top: float, pad_bot: float) -> int:
-    """Total box height: top border + padding + content + padding + bottom border.
+def box_height(content_rows: int, pad_top: float, pad_bot: float,
+               leading_ratio: float) -> float:
+    """Total box height in grid units.
 
-    Matches TeX's \\pgfmathtruncatemacro which truncates (floors for positive).
+    Border rows are 1/leading_ratio grid units (em-square, no leading).
+    Body rows (padding + content) are 1 grid unit each.
     """
-    return int(1 + pad_top + content_rows + pad_bot + 1)
+    border_grid = 1.0 / leading_ratio
+    body_rows = int(pad_top + content_rows + pad_bot)
+    return 2 * border_grid + body_rows
